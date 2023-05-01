@@ -44,7 +44,6 @@
     "@pinecone-database/pinecone": "^0.0.14",
     "@xenova/transformers": "github:xenova/transformers.js",
     "csv-reader": "^1.0.11",
-    "dataframe-js": "^1.4.4",
     "dotenv": "^16.0.3",
     "onnxruntime-node": "^1.14.0",
     "papaparse": "^5.4.1"
