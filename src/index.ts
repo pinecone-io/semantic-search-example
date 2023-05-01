@@ -1,46 +1,66 @@
-// Next.js API route support: https://nextjs.org/docs/api-routes/introduction
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import fs from 'fs'
+import { embedder } from './utils/embeddings'
+import { PineconeClient } from '@pinecone-database/pinecone';
+import { chunkedUpsert, createIndexIfNotExists } from './utils/pinecone';
+import { config } from 'dotenv';
+import { loadCSVFile } from './utils/csvLoader';
+import { validateEnvironmentVariables } from './utils/util';
 
-import { BabyAGI } from './babyAgi/babyAgi'
-import { PineconeStore } from 'langchain/vectorstores';
-import { OpenAIEmbeddings } from 'langchain/embeddings/openai';
-import { createIndexIfNotExists, getPineconeClient } from './utils/pinecone';
-import { OpenAI } from 'langchain/llms/openai';
-import inquirer from 'inquirer';
+config()
+
+const pineconeClient = new PineconeClient()
+
+
+
+const getCommandLineArguments = () => {
+  const csvPath = process.argv[3];
+  const column = process.argv[4];
+
+  if (!csvPath) {
+    console.error('Please provide a CSV path');
+    process.exit(1);
+  }
+
+  return { csvPath, column };
+};
 
 const run = async () => {
-  const client = await getPineconeClient()
-  const indexName = "babyagi"
+  validateEnvironmentVariables();
+  // Initialize the client with your Pinecone API key and environment
+  await pineconeClient.init({
+    apiKey: process.env.PINECONE_API_KEY!,
+    environment: process.env.PINECONE_ENVIRONMENT!,
+  });
 
-  await createIndexIfNotExists(client, indexName)
-  const pineconeIndex = client.Index(indexName)
+  const { csvPath, column } = getCommandLineArguments();
 
-  const model = new OpenAI({ temperature: 0 });
+  // Get csv file absolute path
+  const csvAbsolutePath = fs.realpathSync(csvPath)
 
-  const vectorStore = await PineconeStore.fromExistingIndex(
-    new OpenAIEmbeddings(),
-    { pineconeIndex }
-  );
+  // Create a readable stream from the CSV file
+  const { data, meta } = await loadCSVFile(csvAbsolutePath)
 
-  const answer = await inquirer.prompt([{
-    name: 'objective',
-    message: `What is the AI's objective?`,
-  }, {
-    name: 'numberIterations',
-    message: `How many iterations should the AI apply to achieve this task?`,
-  },
-  {
-    name: 'verbose',
-    message: `Would you like to use verbose mode?`,
-    type: 'confirm',
+  if (!meta.fields?.includes(column)) {
+    console.error(`Column ${column} not found in CSV file`)
+    process.exit(1)
   }
-  ])
 
-  const babyAgi = new BabyAGI(model, false, vectorStore, answer.numberIterations);
+  const documents = data.map((row) => row[column] as string)
 
-  await babyAgi.execute({ "objective": answer.objective })
+  // Create a Pinecone index with the name "word-embeddings" and a dimension of 384
+  await createIndexIfNotExists(pineconeClient, 'word-embeddings', 384)
 
-  //Cleanup
-  await client.deleteIndex({ indexName })
+  // Insert the embeddings into the index
+  const index = pineconeClient.Index('word-embeddings')
+
+  // Embed the documents
+  await embedder.init()
+  await embedder.embedBatch(documents, 1000, async (embeddings) => {
+    await chunkedUpsert(index, embeddings, 'word-embeddings')
+  })
+
+  console.log(`Inserted ${documents.length} documents into index 'word-embeddings'`)
 }
 
 run()
