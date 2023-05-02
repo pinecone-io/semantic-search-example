@@ -1,37 +1,19 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import fs from 'fs'
 import { embedder } from './utils/embeddings'
-import { PineconeClient } from '@pinecone-database/pinecone';
-import { chunkedUpsert, createIndexIfNotExists } from './utils/pinecone';
+import { chunkedUpsert, createIndexIfNotExists, getPineconeClient } from './utils/pinecone';
 import { config } from 'dotenv';
 import { loadCSVFile } from './utils/csvLoader';
-import { validateEnvironmentVariables } from './utils/util';
-
+import { getCommandLineArguments } from './utils/util';
+import cliProgress from 'cli-progress'
 config()
 
-const pineconeClient = new PineconeClient()
-
-
-
-const getCommandLineArguments = () => {
-  const csvPath = process.argv[3];
-  const column = process.argv[4];
-
-  if (!csvPath) {
-    console.error('Please provide a CSV path');
-    process.exit(1);
-  }
-
-  return { csvPath, column };
-};
+const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+const indexName = process.env.PINECONE_INDEX!
+let counter = 0;
 
 const run = async () => {
-  validateEnvironmentVariables();
-  // Initialize the client with your Pinecone API key and environment
-  await pineconeClient.init({
-    apiKey: process.env.PINECONE_API_KEY!,
-    environment: process.env.PINECONE_ENVIRONMENT!,
-  });
+  const pineconeClient = await getPineconeClient()
 
   const { csvPath, column } = getCommandLineArguments();
 
@@ -41,26 +23,34 @@ const run = async () => {
   // Create a readable stream from the CSV file
   const { data, meta } = await loadCSVFile(csvAbsolutePath)
 
+  // Ensure the selected column exists in the CSV file
   if (!meta.fields?.includes(column)) {
     console.error(`Column ${column} not found in CSV file`)
     process.exit(1)
   }
 
+  // Extract the selected column from the CSV file
   const documents = data.map((row) => row[column] as string)
 
   // Create a Pinecone index with the name "word-embeddings" and a dimension of 384
-  await createIndexIfNotExists(pineconeClient, 'word-embeddings', 384)
+  await createIndexIfNotExists(pineconeClient, indexName, 384)
 
-  // Insert the embeddings into the index
-  const index = pineconeClient.Index('word-embeddings')
+  // Select the target Pinecone index
+  const index = pineconeClient.Index(indexName)
 
-  // Embed the documents
+  progressBar.start(documents.length, 0);
+
+  // Start the batch embedding process
   await embedder.init()
   await embedder.embedBatch(documents, 1000, async (embeddings) => {
-    await chunkedUpsert(index, embeddings, 'word-embeddings')
+    counter += embeddings.length
+    //Whenever the batch embedding process returns a batch of embeddings, insert them into the index
+    await chunkedUpsert(index, embeddings, indexName)
+    progressBar.update(counter);
   })
 
-  console.log(`Inserted ${documents.length} documents into index 'word-embeddings'`)
+  progressBar.stop();
+  console.log(`Inserted ${documents.length} documents into index ${indexName}`)
 }
 
 run()

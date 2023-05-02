@@ -2,7 +2,6 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { pipeline } from "@xenova/transformers";
-
 import { Vector } from "@pinecone-database/pinecone";
 import { randomUUID } from "crypto";
 import { sliceIntoChunks } from "./util";
@@ -11,7 +10,10 @@ class Embedder {
   private pipe: any;
 
   async init() {
-    this.pipe = await pipeline('embeddings', 'sentence-transformers/all-MiniLM-L6-v2');
+    this.pipe = await pipeline(
+      "embeddings",
+      "sentence-transformers/all-MiniLM-L6-v2"
+    );
   }
 
   async embed(text: string): Promise<Vector> {
@@ -26,27 +28,20 @@ class Embedder {
   }
 
   async embedMany(texts: string[]): Promise<Vector[]> {
-    return await executePromisesInSequence(texts.map(text => this.embed(text)));
+    return await Promise.all(texts.map((text) => this.embed(text)));
   }
 
-  async embedBatch(texts: string[], batchSize: number, onDoneBatch: (embeddings: Vector[]) => void) {
+  async embedBatch(
+    texts: string[],
+    batchSize: number,
+    onDoneBatch: (embeddings: Vector[]) => void
+  ) {
     const batches = sliceIntoChunks<string>(texts, batchSize);
     for (const batch in batches) {
       const embeddings = await this.embedMany(batches[batch]);
       await onDoneBatch(embeddings);
     }
   }
-}
-
-async function executePromisesInSequence(promises: Promise<any>[]) {
-  const results = [];
-  for (const promise of promises) {
-    process.stdout.write('.');
-    const result = await promise;
-    results.push(result);
-  }
-
-  return results;
 }
 
 const embedder = new Embedder();
