@@ -2,7 +2,7 @@
 import { IndexMeta, PineconeClient, Vector } from "@pinecone-database/pinecone";
 import { VectorOperationsApi } from "@pinecone-database/pinecone/dist/pinecone-generated-ts-fetch";
 import { config } from "dotenv";
-import { sliceIntoChunks, validateEnvironmentVariables } from "./util";
+import { sliceIntoChunks, validateEnvironmentVariables } from "./utils/util";
 
 config();
 

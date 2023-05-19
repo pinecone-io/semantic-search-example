@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import fs from 'fs'
-import { embedder } from './utils/embeddings'
-import { chunkedUpsert, createIndexIfNotExists, getPineconeClient } from './utils/pinecone';
+import { embedder } from './embeddings'
+import { chunkedUpsert, createIndexIfNotExists, getPineconeClient } from './pinecone';
 import { config } from 'dotenv';
-import { loadCSVFile } from './utils/csvLoader';
+import { loadCSVFile } from './csvLoader';
 import { getCommandLineArguments } from './utils/util';
 import cliProgress from 'cli-progress'
 config()

@@ -4,7 +4,7 @@
 import { pipeline } from "@xenova/transformers";
 import { Vector } from "@pinecone-database/pinecone";
 import { randomUUID } from "crypto";
-import { sliceIntoChunks } from "./util";
+import { sliceIntoChunks } from "./utils/util";
 
 class Embedder {
   private pipe: any;

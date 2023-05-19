@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { embedder } from "./utils/embeddings";
+import { embedder } from "./embeddings";
 import { config } from "dotenv";
 import { validateEnvironmentVariables } from "./utils/util";
-import { getPineconeClient } from "./utils/pinecone";
+import { getPineconeClient } from "./pinecone";
 
 config();
 
