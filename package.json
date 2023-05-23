@@ -6,8 +6,12 @@
     "clean": "rimraf ./build",
     "build": "npm-run-all format lint && tsc",
     "start": "node build/src",
+    "index": "node build/src/index.js",
+    "query": "node --input-type=module build/src/query.js",
     "local": "ts-node src",
-    "dev": "nodemon src/index.ts -e ts,json --exec 'npm run local'",
+    "localQuery": "ts-node src/query.ts",
+    "devIndex": "nodemon src/index.ts -e ts,json --exec 'npm run local'",
+    "devQuery": "nodemon src/query.ts -e ts,json --exec 'npm run localQuery'",
     "lint": "eslint src",
     "format": "npx prettier --write src",
     "format:check": "npx prettier --check src"
@@ -18,6 +22,7 @@
     "@types/cli-progress": "^3.11.0",
     "@types/node": "^18.14.0",
     "@types/papaparse": "^5.3.7",
+    "@types/yargs": "^17.0.24",
     "@typescript-eslint/eslint-plugin": "^5.52.0",
     "@typescript-eslint/parser": "^5.52.0",
     "eslint": "^8.34.0",
@@ -30,11 +35,12 @@
     "typescript": "^4.9.5"
   },
   "dependencies": {
-    "@pinecone-database/pinecone": "^0.0.14",
+    "@pinecone-database/pinecone": "^0.1.6",
     "@xenova/transformers": "github:xenova/transformers.js",
     "cli-progress": "^3.12.0",
     "dotenv": "^16.0.3",
     "onnxruntime-node": "^1.14.0",
-    "papaparse": "^5.4.1"
+    "papaparse": "^5.4.1",
+    "yargs": "^17.7.2"
   }
 }
