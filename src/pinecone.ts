@@ -1,14 +1,13 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { PineconeClient } from "@pinecone-database/pinecone";
 import { config } from "dotenv";
-import { validateEnvironmentVariables } from "./utils/util";
+import { getEnv, validateEnvironmentVariables } from "./utils/util";
 
 config();
 
 let pineconeClient: PineconeClient | null = null;
 
-// Returns a PineconeClient instance
-export const getPineconeClient: () => Promise<PineconeClient> = async () => {
+// Returns a Promise that resolves to a PineconeClient instance
+export const getPineconeClient = async (): Promise<PineconeClient> => {
   validateEnvironmentVariables();
 
   if (pineconeClient) {
@@ -17,8 +16,8 @@ export const getPineconeClient: () => Promise<PineconeClient> = async () => {
     pineconeClient = new PineconeClient();
 
     await pineconeClient.init({
-      apiKey: process.env.PINECONE_API_KEY!,
-      environment: process.env.PINECONE_ENVIRONMENT!,
+      apiKey: getEnv('PINECONE_API_KEY'),
+      environment: getEnv('PINECONE_ENVIRONMENT'),
     });
   }
   return pineconeClient;

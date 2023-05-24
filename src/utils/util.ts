@@ -7,18 +7,18 @@ const sliceIntoChunks = <T>(arr: T[], chunkSize: number) => {
   );
 };
 
+function getEnv(key: string): string {
+  const value = process.env[key];
+  if (!value) {
+    throw new Error(`${key} environment variable not set`);
+  }
+  return value;
+}
+
 const validateEnvironmentVariables = () => {
-  if (!process.env.PINECONE_API_KEY) {
-    throw new Error("PINECONE_API_KEY environment variable not set");
-  }
-
-  if (!process.env.PINECONE_ENVIRONMENT) {
-    throw new Error("PINECONE_ENVIRONMENT environment variable not set");
-  }
-
-  if (!process.env.PINECONE_INDEX) {
-    throw new Error("PINECONE_INDEX environment variable not set");
-  }
+  getEnv('PINECONE_API_KEY');
+  getEnv('PINECONE_ENVIRONMENT')
+  getEnv('PINECONE_INDEX')
 };
 
 const getIndexingCommandLineArguments = () => {
@@ -75,6 +75,7 @@ const getQueryingCommandLineArguments = () => {
 
 export {
   sliceIntoChunks,
+  getEnv,
   validateEnvironmentVariables,
   getIndexingCommandLineArguments,
   getQueryingCommandLineArguments,
