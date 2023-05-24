@@ -16,9 +16,9 @@ function getEnv(key: string): string {
 }
 
 const validateEnvironmentVariables = () => {
-  getEnv('PINECONE_API_KEY');
-  getEnv('PINECONE_ENVIRONMENT')
-  getEnv('PINECONE_INDEX')
+  getEnv("PINECONE_API_KEY");
+  getEnv("PINECONE_ENVIRONMENT");
+  getEnv("PINECONE_INDEX");
 };
 
 const getIndexingCommandLineArguments = () => {
@@ -74,6 +74,9 @@ const getQueryingCommandLineArguments = () => {
 };
 
 export {
-  getEnv, getIndexingCommandLineArguments,
-  getQueryingCommandLineArguments, sliceIntoChunks, validateEnvironmentVariables
+  getEnv,
+  getIndexingCommandLineArguments,
+  getQueryingCommandLineArguments,
+  sliceIntoChunks,
+  validateEnvironmentVariables,
 };

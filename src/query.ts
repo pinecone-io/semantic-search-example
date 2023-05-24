@@ -8,7 +8,7 @@ import {
 } from "./utils/util";
 
 config();
-const indexName = getEnv('PINECONE_INDEX');
+const indexName = getEnv("PINECONE_INDEX");
 
 const run = async () => {
   validateEnvironmentVariables();
@@ -17,8 +17,6 @@ const run = async () => {
 
   // Insert the embeddings into the index
   const index = pineconeClient.Index(indexName);
-  // Initialize the embedder
-  await embedder.init();
   // Embed the query
   const queryEmbedding = await embedder.embed(query);
 

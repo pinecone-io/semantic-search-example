@@ -16,8 +16,8 @@ export const getPineconeClient = async (): Promise<PineconeClient> => {
     pineconeClient = new PineconeClient();
 
     await pineconeClient.init({
-      apiKey: getEnv('PINECONE_API_KEY'),
-      environment: getEnv('PINECONE_ENVIRONMENT'),
+      apiKey: getEnv("PINECONE_API_KEY"),
+      environment: getEnv("PINECONE_ENVIRONMENT"),
     });
   }
   return pineconeClient;
