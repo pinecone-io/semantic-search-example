@@ -1,25 +1,21 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import { pipeline } from "@xenova/transformers";
 import { Vector } from "@pinecone-database/pinecone";
-import { randomUUID } from "crypto";
+import { Pipeline, pipeline } from "@xenova/transformers";
+import { v4 as uuidv4 } from 'uuid';
 import { sliceIntoChunks } from "./utils/util";
 
 class Embedder {
-  private pipe: any;
+  private pipe: Pipeline | null = null;
 
+  // Initialize the pipeline
   async init() {
-    this.pipe = await pipeline(
-      "embeddings",
-      "sentence-transformers/all-MiniLM-L6-v2"
-    );
+    this.pipe = await pipeline("embeddings", "sentence-transformers/all-MiniLM-L6-v2");
   }
 
+  // Embed a single string
   async embed(text: string): Promise<Vector> {
-    const result = await this.pipe(text);
+    const result = this.pipe && await this.pipe(text);
     return {
-      id: randomUUID(),
+      id: uuidv4(),
       metadata: {
         text,
       },
@@ -27,18 +23,12 @@ class Embedder {
     };
   }
 
-  async embedMany(texts: string[]): Promise<Vector[]> {
-    return await Promise.all(texts.map((text) => this.embed(text)));
-  }
-
-  async embedBatch(
-    texts: string[],
-    batchSize: number,
-    onDoneBatch: (embeddings: Vector[]) => void
-  ) {
+  // Batch an array of string and embed each batch
+  // Call onDoneBatch with the embeddings of each batch
+  async embedBatch(texts: string[], batchSize: number, onDoneBatch: (embeddings: Vector[]) => void) {
     const batches = sliceIntoChunks<string>(texts, batchSize);
-    for (const batch in batches) {
-      const embeddings = await this.embedMany(batches[batch]);
+    for (const batch of batches) {
+      const embeddings = await Promise.all(batch.map((text) => this.embed(text)));
       await onDoneBatch(embeddings);
     }
   }

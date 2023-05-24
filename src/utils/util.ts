@@ -74,9 +74,6 @@ const getQueryingCommandLineArguments = () => {
 };
 
 export {
-  sliceIntoChunks,
-  getEnv,
-  validateEnvironmentVariables,
-  getIndexingCommandLineArguments,
-  getQueryingCommandLineArguments,
+  getEnv, getIndexingCommandLineArguments,
+  getQueryingCommandLineArguments, sliceIntoChunks, validateEnvironmentVariables
 };

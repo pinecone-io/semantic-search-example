@@ -1,14 +1,14 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { embedder } from "./embeddings";
 import { config } from "dotenv";
+import { embedder } from "./embeddings";
+import { getPineconeClient } from "./pinecone";
 import {
+  getEnv,
   getQueryingCommandLineArguments,
   validateEnvironmentVariables,
 } from "./utils/util";
-import { getPineconeClient } from "./pinecone";
 
 config();
-const indexName = process.env.PINECONE_INDEX!;
+const indexName = getEnv('PINECONE_INDEX');
 
 const run = async () => {
   validateEnvironmentVariables();
@@ -33,6 +33,7 @@ const run = async () => {
     },
   });
 
+  // Print the results
   console.log(
     results.matches?.map((match) => ({
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment

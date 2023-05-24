@@ -25,14 +25,20 @@ There are two main components to this application: the data loader and the searc
 The data loading process starts with the CSV file. This file contains the articles that will be indexed and made searchable. To load this data, the project uses the `papaparse` library. The loadCSVFile function in `csvLoader.ts` reads the file and uses `papaparse` to parse the CSV data into JavaScript objects. The `dynamicTyping` option is set to true to automatically convert the data to the appropriate types. After this step, you will have an array of objects, where each object represents an article​.
 
 ```typescript
-import Papa from "papaparse";
 import fs from "fs/promises";
+import Papa from "papaparse";
 
 async function loadCSVFile(
   filePath: string
 ): Promise<Papa.ParseResult<Record<string, unknown>>> {
   try {
-    const data = await fs.readFile(filePath, "utf8");
+    // Get csv file absolute path
+    const csvAbsolutePath = await fs.realpath(filePath);
+
+    // Create a readable stream from the CSV file
+    const data = await fs.readFile(csvAbsolutePath, "utf8");
+
+    // Parse the CSV file
     return await Papa.parse(data, {
       dynamicTyping: true,
       header: true,
@@ -52,14 +58,15 @@ export { loadCSVFile };
 The text embedding operation is performed in the `Embedder` class. This class uses a pipeline from the [`@xenova/transformers`](https://github.com/xenova/transformers.js) library to generate embeddings for the input text. We use the [`sentence-transformers/all-MiniLM-L6-v2`](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) model to generate the embeddings. The class provides methods to embed a single string, an array of strings, or an array of strings in batches​ - which will come in useful a bit later.
 
 ```typescript
-import { pipeline } from "@xenova/transformers";
 import { Vector } from "@pinecone-database/pinecone";
-import { randomUUID } from "crypto";
+import { Pipeline, pipeline } from "@xenova/transformers";
+import { v4 as uuidv4 } from "uuid";
 import { sliceIntoChunks } from "./utils/util";
 
 class Embedder {
-  private pipe: any;
+  private pipe: Pipeline | null = null;
 
+  // Initialize the pipeline
   async init() {
     this.pipe = await pipeline(
       "embeddings",
@@ -67,10 +74,11 @@ class Embedder {
     );
   }
 
+  // Embed a single string
   async embed(text: string): Promise<Vector> {
-    const result = await this.pipe(text);
+    const result = this.pipe && (await this.pipe(text));
     return {
-      id: randomUUID(),
+      id: uuidv4(),
       metadata: {
         text,
       },
@@ -78,18 +86,18 @@ class Embedder {
     };
   }
 
-  async embedMany(texts: string[]): Promise<Vector[]> {
-    return await Promise.all(texts.map((text) => this.embed(text)));
-  }
-
+  // Batch an array of string and embed each batch
+  // Call onDoneBatch with the embeddings of each batch
   async embedBatch(
     texts: string[],
     batchSize: number,
     onDoneBatch: (embeddings: Vector[]) => void
   ) {
     const batches = sliceIntoChunks<string>(texts, batchSize);
-    for (const batch in batches) {
-      const embeddings = await this.embedMany(batches[batch]);
+    for (const batch of batches) {
+      const embeddings = await Promise.all(
+        batch.map((text) => this.embed(text))
+      );
       await onDoneBatch(embeddings);
     }
   }
@@ -107,14 +115,14 @@ This function ensures that the required environment variables are set, and then 
 ```typescript
 import { PineconeClient } from "@pinecone-database/pinecone";
 import { config } from "dotenv";
-import { validateEnvironmentVariables } from "./utils/util";
+import { getEnv, validateEnvironmentVariables } from "./utils/util";
 
 config();
 
 let pineconeClient: PineconeClient | null = null;
 
-// Returns a PineconeClient instance
-export const getPineconeClient: () => Promise<PineconeClient> = async () => {
+// Returns a Promise that resolves to a PineconeClient instance
+export const getPineconeClient = async (): Promise<PineconeClient> => {
   validateEnvironmentVariables();
 
   if (pineconeClient) {
@@ -123,8 +131,8 @@ export const getPineconeClient: () => Promise<PineconeClient> = async () => {
     pineconeClient = new PineconeClient();
 
     await pineconeClient.init({
-      apiKey: process.env.PINECONE_API_KEY!,
-      environment: process.env.PINECONE_ENVIRONMENT!,
+      apiKey: getEnv("PINECONE_API_KEY"),
+      environment: getEnv("PINECONE_ENVIRONMENT"),
     });
   }
   return pineconeClient;
@@ -136,22 +144,31 @@ export const getPineconeClient: () => Promise<PineconeClient> = async () => {
 Now that we have a way to load data and create embeddings, let put the two together and save the embeddings in Pinecone. In the following section, we get the path of the file we need to process from the command like. We load the CSV file, create the Pinecone index and then start the embedding process. The embedding process is done in batches of 1000. Once we have a batch of embeddings, we insert them into the index.
 
 ```typescript
+import { utils } from "@pinecone-database/pinecone";
+import cliProgress from "cli-progress";
+import { config } from "dotenv";
 import fs from "fs";
+import { loadCSVFile } from "./csvLoader";
 import { embedder } from "./embeddings";
 import { getPineconeClient } from "./pinecone";
-import { loadCSVFile } from "./csvLoader";
-import { getCommandLineArguments } from "./utils/util";
-import { utils } from "@pinecone-database/pinecone";
-
+import { getEnv, getIndexingCommandLineArguments } from "./utils/util";
 const { createIndexIfNotExists, chunkedUpsert } = utils;
 
-const indexName = process.env.PINECONE_INDEX!;
+config();
+
+const progressBar = new cliProgress.SingleBar(
+  {},
+  cliProgress.Presets.shades_classic
+);
+const indexName = getEnv("PINECONE_INDEX");
+let counter = 0;
 
 const run = async () => {
-  // Initialize the pinecone client
-  const pineconeClient = await getPineconeClient();
+  // Get the CSV path and column name from the command line arguments
+  const { csvPath, column } = getIndexingCommandLineArguments();
 
-  const { csvPath, column } = getCommandLineArguments();
+  // Get a PineconeClient instance
+  const pineconeClient = await getPineconeClient();
 
   // Get csv file absolute path
   const csvAbsolutePath = fs.realpathSync(csvPath);
@@ -174,12 +191,19 @@ const run = async () => {
   // Select the target Pinecone index
   const index = pineconeClient.Index(indexName);
 
+  // Start the progress bar
+  progressBar.start(documents.length, 0);
+
   // Start the batch embedding process
   await embedder.init();
   await embedder.embedBatch(documents, 1000, async (embeddings) => {
+    counter += embeddings.length;
     //Whenever the batch embedding process returns a batch of embeddings, insert them into the index
-    await chunkedUpsert(index, embeddings, indexName);
+    await chunkedUpsert(index, embeddings, "default");
+    progressBar.update(counter);
   });
+
+  progressBar.stop();
   console.log(`Inserted ${documents.length} documents into index ${indexName}`);
 };
 
@@ -221,15 +245,17 @@ Index is ready.
 Now that our index is populated we can begin making queries. We are performing a semantic search for similar questions, so we should embed and search with another question.
 
 ```typescript
-import { embedder } from "./embeddings";
 import { config } from "dotenv";
+import { embedder } from "./embeddings";
+import { getPineconeClient } from "./pinecone";
 import {
+  getEnv,
   getQueryingCommandLineArguments,
   validateEnvironmentVariables,
 } from "./utils/util";
-import { getPineconeClient } from "./pinecone";
 
 config();
+const indexName = getEnv("PINECONE_INDEX");
 
 const run = async () => {
   validateEnvironmentVariables();
@@ -237,7 +263,7 @@ const run = async () => {
   const { query, topK } = getQueryingCommandLineArguments();
 
   // Insert the embeddings into the index
-  const index = pineconeClient.Index("word-embeddings");
+  const index = pineconeClient.Index(indexName);
   // Initialize the embedder
   await embedder.init();
   // Embed the query
@@ -250,11 +276,19 @@ const run = async () => {
       topK,
       includeMetadata: true,
       includeValues: false,
-      namespace: "word-embeddings",
+      namespace: "default",
     },
   });
 
-  console.log(results.matches);
+  // Print the results
+  console.log(
+    results.matches?.map((match) => ({
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      text: match.metadata?.text,
+      score: match.score,
+    }))
+  );
 };
 
 run();

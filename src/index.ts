@@ -1,27 +1,25 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-import fs from "fs";
-import { embedder } from "./embeddings";
-import { getPineconeClient } from "./pinecone";
-import { config } from "dotenv";
-import { loadCSVFile } from "./csvLoader";
-import { getIndexingCommandLineArguments } from "./utils/util";
 import { utils } from "@pinecone-database/pinecone";
 import cliProgress from "cli-progress";
+import { config } from "dotenv";
+import fs from "fs";
+import { loadCSVFile } from "./csvLoader";
+import { embedder } from "./embeddings";
+import { getPineconeClient } from "./pinecone";
+import { getEnv, getIndexingCommandLineArguments } from "./utils/util";
 const { createIndexIfNotExists, chunkedUpsert } = utils;
 
 config();
 
-const progressBar = new cliProgress.SingleBar(
-  {},
-  cliProgress.Presets.shades_classic
-);
-const indexName = process.env.PINECONE_INDEX!;
+const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+const indexName = getEnv('PINECONE_INDEX');
 let counter = 0;
 
 const run = async () => {
-  const pineconeClient = await getPineconeClient();
-
+  // Get the CSV path and column name from the command line arguments
   const { csvPath, column } = getIndexingCommandLineArguments();
+
+  // Get a PineconeClient instance
+  const pineconeClient = await getPineconeClient();
 
   // Get csv file absolute path
   const csvAbsolutePath = fs.realpathSync(csvPath);
@@ -44,6 +42,7 @@ const run = async () => {
   // Select the target Pinecone index
   const index = pineconeClient.Index(indexName);
 
+  // Start the progress bar
   progressBar.start(documents.length, 0);
 
   // Start the batch embedding process
