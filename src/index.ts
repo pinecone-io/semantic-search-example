@@ -1,12 +1,10 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-import fs from "fs";
-import { embedder } from "./embeddings";
-import { getPineconeClient } from "./pinecone";
-import { config } from "dotenv";
-import { loadCSVFile } from "./csvLoader";
-import { getIndexingCommandLineArguments } from "./utils/util";
 import { utils } from "@pinecone-database/pinecone";
 import cliProgress from "cli-progress";
+import { config } from "dotenv";
+import { loadCSVFile } from "./csvLoader";
+import { embedder } from "./embeddings";
+import { getPineconeClient } from "./pinecone";
+import { getEnv, getIndexingCommandLineArguments } from "./utils/util";
 const { createIndexIfNotExists, chunkedUpsert } = utils;
 
 config();
@@ -15,19 +13,14 @@ const progressBar = new cliProgress.SingleBar(
   {},
   cliProgress.Presets.shades_classic
 );
-const indexName = process.env.PINECONE_INDEX!;
+const indexName = getEnv("PINECONE_INDEX");
 let counter = 0;
 
 const run = async () => {
-  const pineconeClient = await getPineconeClient();
-
+  // Get arguments from the command line
   const { csvPath, column } = getIndexingCommandLineArguments();
-
-  // Get csv file absolute path
-  const csvAbsolutePath = fs.realpathSync(csvPath);
-
   // Create a readable stream from the CSV file
-  const { data, meta } = await loadCSVFile(csvAbsolutePath);
+  const { data, meta } = await loadCSVFile(csvPath);
 
   // Ensure the selected column exists in the CSV file
   if (!meta.fields?.includes(column)) {
@@ -38,12 +31,16 @@ const run = async () => {
   // Extract the selected column from the CSV file
   const documents = data.map((row) => row[column] as string);
 
+  // Initialize the Pinecone client
+  const pineconeClient = await getPineconeClient();
+
   // Create a Pinecone index with the name "word-embeddings" and a dimension of 384
   await createIndexIfNotExists(pineconeClient, indexName, 384);
 
   // Select the target Pinecone index
   const index = pineconeClient.Index(indexName);
 
+  // Initialize the progress bar
   progressBar.start(documents.length, 0);
 
   // Start the batch embedding process

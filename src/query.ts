@@ -1,22 +1,27 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { embedder } from "./embeddings";
 import { config } from "dotenv";
+import { embedder } from "./embeddings";
+import { getPineconeClient } from "./pinecone";
 import {
+  getEnv,
   getQueryingCommandLineArguments,
   validateEnvironmentVariables,
 } from "./utils/util";
-import { getPineconeClient } from "./pinecone";
 
 config();
-const indexName = process.env.PINECONE_INDEX!;
+const indexName = getEnv("PINECONE_INDEX");
 
 const run = async () => {
   validateEnvironmentVariables();
-  const pineconeClient = await getPineconeClient();
+
+  // Get arguments from the command line
   const { query, topK } = getQueryingCommandLineArguments();
 
-  // Insert the embeddings into the index
+  // Initialize the Pinecone client
+  const pineconeClient = await getPineconeClient();
+
+  // Select the target Pinecone index
   const index = pineconeClient.Index(indexName);
+
   // Initialize the embedder
   await embedder.init();
   // Embed the query

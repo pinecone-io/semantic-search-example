@@ -34,7 +34,9 @@ class Embedder {
   ) {
     const batches = sliceIntoChunks<string>(texts, batchSize);
     for (const batch of batches) {
-      const embeddings = await Promise.all(batch.map((text) => this.embed(text)));
+      const embeddings = await Promise.all(
+        batch.map((text) => this.embed(text))
+      );
       await onDoneBatch(embeddings);
     }
   }

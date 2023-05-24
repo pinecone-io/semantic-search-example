@@ -1,11 +1,12 @@
-import Papa from "papaparse";
 import fs from "fs/promises";
+import Papa from "papaparse";
 
 async function loadCSVFile(
   filePath: string
 ): Promise<Papa.ParseResult<Record<string, unknown>>> {
   try {
-    const data = await fs.readFile(filePath, "utf8");
+    const csvAbsolutePath = await fs.realpath(filePath);
+    const data = await fs.readFile(csvAbsolutePath, "utf8");
     return await Papa.parse(data, {
       dynamicTyping: true,
       header: true,
