@@ -27,18 +27,14 @@ class Embedder {
     };
   }
 
-  async embedMany(texts: string[]): Promise<Vector[]> {
-    return await Promise.all(texts.map((text) => this.embed(text)));
-  }
-
   async embedBatch(
     texts: string[],
     batchSize: number,
     onDoneBatch: (embeddings: Vector[]) => void
   ) {
     const batches = sliceIntoChunks<string>(texts, batchSize);
-    for (const batch in batches) {
-      const embeddings = await this.embedMany(batches[batch]);
+    for (const batch of batches) {
+      const embeddings = await Promise.all(batch.map((text) => this.embed(text)));
       await onDoneBatch(embeddings);
     }
   }
