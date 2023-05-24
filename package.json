@@ -8,6 +8,7 @@
     "start": "node build/src",
     "index": "node build/src/index.js",
     "query": "node --input-type=module build/src/query.js",
+    "delete": "node --input-type=module build/src/delete.js",
     "local": "ts-node src",
     "localQuery": "ts-node src/query.ts",
     "devIndex": "nodemon src/index.ts -e ts,json --exec 'npm run local'",

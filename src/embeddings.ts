@@ -16,6 +16,7 @@ class Embedder {
     );
   }
 
+  // Embeds a text and returns the embedding
   async embed(text: string): Promise<Vector> {
     const result = await this.pipe(text);
     return {
@@ -27,6 +28,7 @@ class Embedder {
     };
   }
 
+  // Embeds a batch of texts and calls onDoneBatch with the embeddings
   async embedBatch(
     texts: string[],
     batchSize: number,
