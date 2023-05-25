@@ -23,4 +23,4 @@ async function loadCSVFile(
   }
 }
 
-export { loadCSVFile };
+export default loadCSVFile;

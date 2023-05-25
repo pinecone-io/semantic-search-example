@@ -1,14 +1,12 @@
 import { Vector } from "@pinecone-database/pinecone";
 import { v4 as uuidv4 } from "uuid";
-import { sliceIntoChunks } from "./utils/util.js";
-
+import utils from "./utils/util.js";
+const { sliceIntoChunks } = utils;
 class Embedder {
   private pipe: any = null;
 
   // Initialize the pipeline
   async init() {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    //@ts-ignore
     const { pipeline } = await import("@xenova/transformers");
     this.pipe = await pipeline("embeddings", "Xenova/all-MiniLM-L6-v2");
   }
@@ -16,7 +14,6 @@ class Embedder {
   // Embed a single string
   async embed(text: string): Promise<Vector> {
     const result = this.pipe && (await this.pipe(text));
-    console.log("RESULT", this.pipe);
     return {
       id: uuidv4(),
       metadata: {
@@ -46,4 +43,4 @@ class Embedder {
 
 const embedder = new Embedder();
 
-export { embedder };
+export default embedder;

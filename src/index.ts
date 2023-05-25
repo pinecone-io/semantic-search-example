@@ -2,11 +2,12 @@ import { utils } from "@pinecone-database/pinecone";
 import cliProgress from "cli-progress";
 import { config } from "dotenv";
 import fs from "fs";
-import { loadCSVFile } from "./csvLoader";
-import { embedder } from "./embeddings";
-import { getPineconeClient } from "./pinecone";
-import { getEnv, getIndexingCommandLineArguments } from "./utils/util";
+import loadCSVFile from "./csvLoader.js";
+import embedder from "./embeddings.js";
+import { getPineconeClient } from "./pinecone.js";
+import _utils from "./utils/util.js";
 const { createIndexIfNotExists, chunkedUpsert } = utils;
+const { getEnv, getIndexingCommandLineArguments } = _utils;
 
 config();
 
