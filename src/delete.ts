@@ -1,7 +1,7 @@
 import { config } from "dotenv";
 import { getPineconeClient } from "./pinecone.js";
-import utils from "./utils/util.js";
-const { getEnv, validateEnvironmentVariables } = utils;
+import { getEnv, validateEnvironmentVariables } from "./utils/util.js";
+
 config();
 const indexName = getEnv("PINECONE_INDEX");
 

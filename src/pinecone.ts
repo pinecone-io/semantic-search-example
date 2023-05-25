@@ -1,8 +1,6 @@
 import { PineconeClient } from "@pinecone-database/pinecone";
 import { config } from "dotenv";
-import utils from "./utils/util.js";
-
-const { getEnv, validateEnvironmentVariables } = utils;
+import { getEnv, validateEnvironmentVariables } from "./utils/util.js";
 
 config();
 

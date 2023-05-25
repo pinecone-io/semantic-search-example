@@ -73,12 +73,10 @@ const getQueryingCommandLineArguments = () => {
   return { query, topK };
 };
 
-const utils = {
+export {
   getEnv,
   getIndexingCommandLineArguments,
   getQueryingCommandLineArguments,
   sliceIntoChunks,
   validateEnvironmentVariables,
 };
-
-export default utils;

@@ -1,13 +1,11 @@
 import { config } from "dotenv";
-import embedder from "./embeddings.js";
+import { embedder } from "./embeddings.js";
 import { getPineconeClient } from "./pinecone.js";
-import utils from "./utils/util.js";
-
-const {
+import {
   getEnv,
   getQueryingCommandLineArguments,
   validateEnvironmentVariables,
-} = utils;
+} from "./utils/util.js";
 
 config();
 const indexName = getEnv("PINECONE_INDEX");

@@ -53,34 +53,35 @@ export { loadCSVFile };
 The text embedding operation is performed in the `Embedder` class. This class uses a pipeline from the [`@xenova/transformers`](https://github.com/xenova/transformers.js) library to generate embeddings for the input text. We use the [`sentence-transformers/all-MiniLM-L6-v2`](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) model to generate the embeddings. The class provides methods to embed a single string or an array of strings in batches​ - which will come in useful a bit later.
 
 ```typescript
-import { pipeline } from "@xenova/transformers";
 import { Vector } from "@pinecone-database/pinecone";
-import { randomUUID } from "crypto";
-import { sliceIntoChunks } from "./utils/util";
+import { Pipeline } from "@xenova/transformers";
+import { v4 as uuidv4 } from "uuid";
+import { sliceIntoChunks } from "./utils/util.js";
 
 class Embedder {
-  private pipe: any;
+  private pipe: Pipeline | null = null;
 
+  // Initialize the pipeline
   async init() {
-    this.pipe = await pipeline(
-      "embeddings",
-      "sentence-transformers/all-MiniLM-L6-v2"
-    );
+    const { pipeline } = await import("@xenova/transformers");
+    this.pipe = await pipeline("embeddings", "Xenova/all-MiniLM-L6-v2");
   }
 
-  // Embeds a text and returns the embedding
+  // Embed a single string
   async embed(text: string): Promise<Vector> {
-    const result = await this.pipe(text);
+    const result = this.pipe && (await this.pipe(text));
     return {
-      id: randomUUID(),
+      id: uuidv4(),
       metadata: {
         text,
       },
       values: Array.from(result.data),
+      // values: [],
     };
   }
 
-  // Embeds a batch of texts and calls onDoneBatch with the embeddings
+  // Batch an array of string and embed each batch
+  // Call onDoneBatch with the embeddings of each batch
   async embedBatch(
     texts: string[],
     batchSize: number,
@@ -91,7 +92,7 @@ class Embedder {
       const embeddings = await Promise.all(
         batch.map((text) => this.embed(text))
       );
-      await onDoneBatch(embeddings);
+      onDoneBatch(embeddings);
     }
   }
 }
@@ -108,14 +109,14 @@ This function ensures that the required environment variables are set, and then 
 ```typescript
 import { PineconeClient } from "@pinecone-database/pinecone";
 import { config } from "dotenv";
-import { getEnv, validateEnvironmentVariables } from "./utils/util";
+import { getEnv, validateEnvironmentVariables } from "./utils/util.js";
 
 config();
 
 let pineconeClient: PineconeClient | null = null;
 
-// Returns a PineconeClient instance
-export const getPineconeClient: () => Promise<PineconeClient> = async () => {
+// Returns a Promise that resolves to a PineconeClient instance
+export const getPineconeClient = async (): Promise<PineconeClient> => {
   validateEnvironmentVariables();
 
   if (pineconeClient) {
@@ -140,12 +141,12 @@ Now that we have a way to load data and create embeddings, let put the two toget
 import { utils } from "@pinecone-database/pinecone";
 import cliProgress from "cli-progress";
 import { config } from "dotenv";
-import { loadCSVFile } from "./csvLoader";
-import { embedder } from "./embeddings";
-import { getPineconeClient } from "./pinecone";
-import { getEnv, getIndexingCommandLineArguments } from "./utils/util";
-const { createIndexIfNotExists, chunkedUpsert } = utils;
+import loadCSVFile from "./csvLoader.js";
 
+import { embedder } from "./embeddings.js";
+import { getPineconeClient } from "./pinecone.js";
+import { getEnv, getIndexingCommandLineArguments } from "./utils/util.js";
+const { createIndexIfNotExists, chunkedUpsert } = utils;
 config();
 
 const progressBar = new cliProgress.SingleBar(
@@ -156,8 +157,12 @@ const indexName = getEnv("PINECONE_INDEX");
 let counter = 0;
 
 const run = async () => {
-  // Get arguments from the command line
+  // Get the CSV path and column name from the command line arguments
   const { csvPath, column } = getIndexingCommandLineArguments();
+
+  // Get a PineconeClient instance
+  const pineconeClient = await getPineconeClient();
+
   // Create a readable stream from the CSV file
   const { data, meta } = await loadCSVFile(csvPath);
 
@@ -170,16 +175,13 @@ const run = async () => {
   // Extract the selected column from the CSV file
   const documents = data.map((row) => row[column] as string);
 
-  // Initialize the Pinecone client
-  const pineconeClient = await getPineconeClient();
-
   // Create a Pinecone index with the name "word-embeddings" and a dimension of 384
   await createIndexIfNotExists(pineconeClient, indexName, 384);
 
   // Select the target Pinecone index
   const index = pineconeClient.Index(indexName);
 
-  // Initialize the progress bar
+  // Start the progress bar
   progressBar.start(documents.length, 0);
 
   // Start the batch embedding process
@@ -234,30 +236,24 @@ Now that our index is populated we can begin making queries. We are performing a
 
 ```typescript
 import { config } from "dotenv";
-import { embedder } from "./embeddings";
-import { getPineconeClient } from "./pinecone";
+import { embedder } from "./embeddings.js";
+import { getPineconeClient } from "./pinecone.js";
 import {
   getEnv,
   getQueryingCommandLineArguments,
   validateEnvironmentVariables,
-} from "./utils/util";
+} from "./utils/util.js";
 
 config();
 const indexName = getEnv("PINECONE_INDEX");
 
 const run = async () => {
   validateEnvironmentVariables();
-
-  // Get arguments from the command line
+  const pineconeClient = await getPineconeClient();
   const { query, topK } = getQueryingCommandLineArguments();
 
-  // Initialize the Pinecone client
-  const pineconeClient = await getPineconeClient();
-
-  // Select the target Pinecone index
+  // Insert the embeddings into the index
   const index = pineconeClient.Index(indexName);
-
-  // Initialize the embedder
   await embedder.init();
   // Embed the query
   const queryEmbedding = await embedder.embed(query);
@@ -273,8 +269,11 @@ const run = async () => {
     },
   });
 
+  // Print the results
   console.log(
     results.matches?.map((match) => ({
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
       text: match.metadata?.text,
       score: match.score,
     }))

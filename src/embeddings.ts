@@ -1,9 +1,10 @@
 import { Vector } from "@pinecone-database/pinecone";
+import { Pipeline } from "@xenova/transformers";
 import { v4 as uuidv4 } from "uuid";
-import utils from "./utils/util.js";
-const { sliceIntoChunks } = utils;
+import { sliceIntoChunks } from "./utils/util.js";
+
 class Embedder {
-  private pipe: any = null;
+  private pipe: Pipeline | null = null;
 
   // Initialize the pipeline
   async init() {
@@ -43,4 +44,4 @@ class Embedder {
 
 const embedder = new Embedder();
 
-export default embedder;
+export { embedder };

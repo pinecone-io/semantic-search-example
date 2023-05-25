@@ -1,14 +1,12 @@
 import { utils } from "@pinecone-database/pinecone";
 import cliProgress from "cli-progress";
 import { config } from "dotenv";
-import fs from "fs";
 import loadCSVFile from "./csvLoader.js";
-import embedder from "./embeddings.js";
-import { getPineconeClient } from "./pinecone.js";
-import _utils from "./utils/util.js";
-const { createIndexIfNotExists, chunkedUpsert } = utils;
-const { getEnv, getIndexingCommandLineArguments } = _utils;
 
+import { embedder } from "./embeddings.js";
+import { getPineconeClient } from "./pinecone.js";
+import { getEnv, getIndexingCommandLineArguments } from "./utils/util.js";
+const { createIndexIfNotExists, chunkedUpsert } = utils;
 config();
 
 const progressBar = new cliProgress.SingleBar(
@@ -25,11 +23,8 @@ const run = async () => {
   // Get a PineconeClient instance
   const pineconeClient = await getPineconeClient();
 
-  // Get csv file absolute path
-  const csvAbsolutePath = fs.realpathSync(csvPath);
-
   // Create a readable stream from the CSV file
-  const { data, meta } = await loadCSVFile(csvAbsolutePath);
+  const { data, meta } = await loadCSVFile(csvPath);
 
   // Ensure the selected column exists in the CSV file
   if (!meta.fields?.includes(column)) {
@@ -50,6 +45,7 @@ const run = async () => {
   progressBar.start(documents.length, 0);
 
   // Start the batch embedding process
+  await embedder.init();
   await embedder.embedBatch(documents, 1000, async (embeddings) => {
     counter += embeddings.length;
     //Whenever the batch embedding process returns a batch of embeddings, insert them into the index
