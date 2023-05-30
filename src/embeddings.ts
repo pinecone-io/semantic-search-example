@@ -21,7 +21,6 @@ class Embedder {
         text,
       },
       values: Array.from(result.data),
-      // values: [],
     };
   }
 
@@ -37,7 +36,7 @@ class Embedder {
       const embeddings = await Promise.all(
         batch.map((text) => this.embed(text))
       );
-      onDoneBatch(embeddings);
+      await onDoneBatch(embeddings);
     }
   }
 }

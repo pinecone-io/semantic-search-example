@@ -33,7 +33,7 @@
     "prettier": "^2.8.8",
     "rimraf": "^4.1.2",
     "ts-node": "^10.9.1",
-    "typescript": "^5.2.0-dev.20230524"
+    "typescript": "^5.0.4"
   },
   "dependencies": {
     "@pinecone-database/pinecone": "^0.1.6",

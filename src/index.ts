@@ -13,6 +13,7 @@ const progressBar = new cliProgress.SingleBar(
   {},
   cliProgress.Presets.shades_classic
 );
+
 const indexName = getEnv("PINECONE_INDEX");
 let counter = 0;
 
@@ -46,10 +47,11 @@ const run = async () => {
 
   // Start the batch embedding process
   await embedder.init();
-  await embedder.embedBatch(documents, 1000, async (embeddings) => {
+  await embedder.embedBatch(documents, 1, async (embeddings) => {
     counter += embeddings.length;
     //Whenever the batch embedding process returns a batch of embeddings, insert them into the index
     await chunkedUpsert(index, embeddings, "default");
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     progressBar.update(counter);
   });
 
