@@ -45,5 +45,11 @@
     "papaparse": "^5.4.1",
     "uuid": "^9.0.0",
     "yargs": "^17.7.2"
+  },
+  "engines": {
+    "node": "18.16.1",
+    "npm": "9.5.1",
+    "yarn": "Please use npm 9.5.1",
+    "pnpm": "Please use npm 9.5.1"
   }
 }
