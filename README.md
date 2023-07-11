@@ -211,13 +211,13 @@ To test our search engine, we'll use the `test.csv` found in the same repo. This
 To index both columns, we'll run:
 
 ```sh
-npm run index -- -csvPath=test.csv --column=question1
+npm run index -- --csvPath=test.csv --column=question1
 ```
 
 and
 
 ```sh
-npm run index -- -csvPath=test.csv --column=question2
+npm run index -- --csvPath=test.csv --column=question2
 ```
 
 The indexer will set up the index, wait for it to initialize, and then start the embedding process. We should see something like this when then indexer is working:
