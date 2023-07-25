@@ -17,5 +17,9 @@
   "exclude": ["src/**/*.test.ts"],
   "resolveJsonModule": {
     "extensions": [".ts", ".tsx", ".js", ".jsx"]
+  },
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
   }
 }
