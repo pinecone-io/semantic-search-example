@@ -1,19 +1,14 @@
 import { config } from "dotenv";
 import { embedder } from "./embeddings.js";
 import { getPineconeClient } from "./pinecone.js";
-import {
-  getEnv,
-  getQueryingCommandLineArguments,
-  validateEnvironmentVariables,
-} from "./utils/util.js";
+import { getEnv, validateEnvironmentVariables } from "./utils/util.js";
 
 config();
-const indexName = getEnv("PINECONE_INDEX");
 
-const run = async () => {
+export const query = async (query: string, topK: number) => {
+  const indexName = getEnv("PINECONE_INDEX");
   validateEnvironmentVariables();
   const pineconeClient = await getPineconeClient();
-  const { query, topK } = getQueryingCommandLineArguments();
 
   // Insert the embeddings into the index
   const index = pineconeClient.Index(indexName);
@@ -42,5 +37,3 @@ const run = async () => {
     }))
   );
 };
-
-run();

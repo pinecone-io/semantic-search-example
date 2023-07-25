@@ -1,62 +1,94 @@
-import { utils } from "@pinecone-database/pinecone";
-import cliProgress from "cli-progress";
-import { config } from "dotenv";
-import loadCSVFile from "./csvLoader.js";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
+import { load } from "./load.js";
+import { query as queryCommand } from "./query.js";
+import { deleteIndex } from "./deleteIndex.js";
 
-import { embedder } from "./embeddings.js";
-import { getPineconeClient } from "./pinecone.js";
-import { getEnv, getIndexingCommandLineArguments } from "./utils/util.js";
-const { createIndexIfNotExists, chunkedUpsert } = utils;
-config();
+export const run = async () => {
+  const parser = yargs(hideBin(process.argv))
+    .scriptName("semanticSearchExample")
+    .demandCommand(1)
+    // Configure load command
+    .command({
+      command: "load",
+      aliases: ["l"],
+      describe: "Load the embeddings in to Pinecone",
+      builder: (yargs) =>
+        yargs
+          .option("csvPath", {
+            alias: "p",
+            type: "string",
+            description: "Path to your CSV path",
+            demandOption: true,
+          })
+          .option("column", {
+            alias: "c",
+            type: "string",
+            description: "The name for the CSV column",
+            demandOption: true,
+          }),
+      handler: async (argv) => {
+        const { csvPath, column } = argv;
 
-const progressBar = new cliProgress.SingleBar(
-  {},
-  cliProgress.Presets.shades_classic
-);
+        if (!csvPath) {
+          console.error("Please provide a CSV path");
+          process.exit(1);
+        }
 
-const indexName = getEnv("PINECONE_INDEX");
-let counter = 0;
+        await load(csvPath, column);
+      },
+    })
+    // Configure query command
+    .command({
+      command: "query",
+      aliases: ["q"],
+      describe: "Query Pinecone DB",
+      builder: (yargs) =>
+        yargs
+          .option("query", {
+            alias: "q",
+            type: "string",
+            description: "Your query",
+            demandOption: true,
+          })
+          .option("topK", {
+            alias: "k",
+            type: "number",
+            description: "number of results to return",
+            demandOption: true,
+          }),
+      handler: async (argv) => {
+        const { query, topK } = argv;
+        if (!query) {
+          console.error("Please provide a query");
+          process.exit(1);
+        }
 
-const run = async () => {
-  // Get the CSV path and column name from the command line arguments
-  const { csvPath, column } = getIndexingCommandLineArguments();
+        await queryCommand(query, topK);
+      },
+    })
+    // Configure delete command
+    .command({
+      command: "delete",
+      aliases: ["d"],
+      describe: "Delete Pinecone Index",
+      handler: async () => {
+        await deleteIndex();
+      },
+    });
 
-  // Get a PineconeClient instance
-  const pineconeClient = await getPineconeClient();
-
-  // Create a readable stream from the CSV file
-  const { data, meta } = await loadCSVFile(csvPath);
-
-  // Ensure the selected column exists in the CSV file
-  if (!meta.fields?.includes(column)) {
-    console.error(`Column ${column} not found in CSV file`);
-    process.exit(1);
+  // Ensure that parser is not calling real yargs process exit in case of tests
+  if (typeof vitest !== "undefined") {
+    parser.exit = (number) => {
+      throw new Error("Parser, process.exit: " + number);
+    };
   }
 
-  // Extract the selected column from the CSV file
-  const documents = data.map((row) => row[column] as string);
-
-  // Create a Pinecone index with the name "word-embeddings" and a dimension of 384
-  await createIndexIfNotExists(pineconeClient, indexName, 384);
-
-  // Select the target Pinecone index
-  const index = pineconeClient.Index(indexName);
-
-  // Start the progress bar
-  progressBar.start(documents.length, 0);
-
-  // Start the batch embedding process
-  await embedder.init();
-  await embedder.embedBatch(documents, 1, async (embeddings) => {
-    counter += embeddings.length;
-    //Whenever the batch embedding process returns a batch of embeddings, insert them into the index
-    await chunkedUpsert(index, embeddings, "default");
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    progressBar.update(counter);
-  });
-
-  progressBar.stop();
-  console.log(`Inserted ${documents.length} documents into index ${indexName}`);
+  // Parse query command
+  return parser.parse();
 };
 
-run();
+// In case it is not test enviroment run automaticly
+if (typeof vitest === "undefined") {
+  run();
+}
