@@ -17,9 +17,9 @@ describe("Load", () => {
   it("should exit in case index params are is not valid", async () => {
     const mockExit = createMockOnProcessExit();
 
-    await expect(load("./tests/data/test-1.csv", "question6")).rejects.toThrow(
-      "process.exit: 1"
-    );
+    await expect(
+      load("./tests/data/test_small.csv", "question6")
+    ).rejects.toThrow("process.exit: 1");
 
     expect(mockExit).toBeCalledWith(1);
 

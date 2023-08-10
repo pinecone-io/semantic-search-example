@@ -1,52 +1,64 @@
 import { getPineconeClient } from "@src/pinecone.js";
 import { run } from "@src/index.js";
-import { createMockOnProcessExit } from "../utils/index.js";
+import { createMockOnProcessExit, randomizeIndexName } from "../utils/index.js";
 
 describe(
   "Semantic Search",
   () => {
+    const originalEnv = process.env;
     const originalArgv = process.argv;
-    let INDEX_NAME = process.env.PINECONE_INDEX || "";
+
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     const consoleMock = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    beforeAll(() => {
-      // Extend index name with uniqe sufix to ensure that we do not have same index name
-      // In case we delete and create multiple times index with same name error will occure:
-      // Error upserting chunk [PineconeError: PineconeClient: Error calling upsert: PineconeError: PineconeClient: Error calling upsertRaw: no healthy upstream]
-      // Note that this is known bug
-      INDEX_NAME += `-${new Date().getTime()}`;
-    });
+    // In case our test fails it will be reruned. 
+    // We whant to ensure that we are using new index but keep track of previus ones
+    // so we are able to clean after tests are done
+    const createdIndexes: string[] = [];
+    const setIndexName = (name: string) => {
+      const indexName = randomizeIndexName(name);
+      createdIndexes.push(indexName);
+      process.env.PINECONE_INDEX = indexName;
+      return indexName;
+    };
 
     afterEach(() => {
       process.argv = originalArgv;
     });
 
     afterAll(async () => {
-      // Deleate index after usage
-      await (await getPineconeClient())
-        .deleteIndex({ indexName: INDEX_NAME })
-        .catch((e) => console.error(e));
+      // Delete all created indexes after usage
+      await Promise.all(
+        createdIndexes.map(async (indexName) => {
+          try {
+            const pineconeClient = await getPineconeClient();
+            await pineconeClient.deleteIndex({ indexName: indexName });
+          } catch (e) {
+            console.error(e);
+          }
+        })
+      );
 
+      // Reset mocks
       consoleMock.mockReset();
     });
 
     it("should be able to load new questions and query them", async () => {
-      process.env.PINECONE_INDEX = INDEX_NAME;
+      const indexName = setIndexName(originalEnv.PINECONE_INDEX || "");
 
       // Set env for indexing
       process.argv = [
         "node",
         "../../src/index",
         "l",
-        "--csvPath=tests/data/test-1.csv",
+        "--csvPath=tests/data/test_small.csv",
         "--column=question1",
       ];
 
       await run();
 
       const client = await getPineconeClient();
-      const index = client.Index(INDEX_NAME);
+      const index = client.Index(indexName);
       const stats = await index
         .describeIndexStats({
           describeIndexStatsRequest: {},
@@ -56,7 +68,7 @@ describe(
       // Ensure that all vectors are added
       expect(stats?.namespaces?.default.vectorCount).toBe(4);
 
-      // Set enviroment for querying
+      // Set environment for querying
       process.argv = [
         "node",
         "../../src/index",
@@ -99,7 +111,7 @@ describe(
     });
 
     it("should log an error if delte is called without valid index name", async () => {
-      process.env.PINECONE_INDEX = "some-non-exiting-index";
+      setIndexName("some-non-exiting-index");
       process.argv = ["node", "../../src/index", "delete"];
 
       await run();

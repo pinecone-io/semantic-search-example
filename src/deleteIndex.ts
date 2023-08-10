@@ -10,12 +10,13 @@ export const deleteIndex = async () => {
   // Initialize the Pinecone client
   const pineconeClient = await getPineconeClient();
 
-  await pineconeClient
-    .deleteIndex({
+  try {
+    await pineconeClient.deleteIndex({
       indexName,
-    })
-    .then(() => {
-      console.log(`Index is deleted: ${indexName}`);
-    })
-    .catch((e) => console.error(e.toString()));
+    });
+
+    console.log(`Index is deleted: ${indexName}`);
+  } catch (e) {
+    console.error(e?.toString());
+  }
 };

@@ -188,10 +188,7 @@ export const load = async (csvPath: string, column: string) => {
   const documents = data.map((row) => row[column] as string);
 
   // Create a Pinecone index with the name "word-embeddings" and a dimension of 384
-  await createIndexIfNotExists(pineconeClient, indexName, 384).then(
-    // Give a little more space for index to be up and running
-    () => new Promise((resolve) => setTimeout(resolve, 1000))
-  );
+  await createIndexIfNotExists(pineconeClient, indexName, 384);
 
   // Select the target Pinecone index
   const index = pineconeClient.Index(indexName);
@@ -205,7 +202,6 @@ export const load = async (csvPath: string, column: string) => {
     counter += embeddings.length;
     // Whenever the batch embedding process returns a batch of embeddings, insert them into the index
     await chunkedUpsert(index, embeddings, "default");
-    await new Promise((resolve) => setTimeout(resolve, 1000));
     progressBar.update(counter);
   });
 
