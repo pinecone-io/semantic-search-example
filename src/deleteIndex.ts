@@ -3,16 +3,20 @@ import { getPineconeClient } from "./pinecone.js";
 import { getEnv, validateEnvironmentVariables } from "./utils/util.js";
 
 config();
-const indexName = getEnv("PINECONE_INDEX");
 
-const run = async () => {
+export const deleteIndex = async () => {
+  const indexName = getEnv("PINECONE_INDEX");
   validateEnvironmentVariables();
   // Initialize the Pinecone client
   const pineconeClient = await getPineconeClient();
 
-  await pineconeClient.deleteIndex({
-    indexName,
-  });
-};
+  try {
+    await pineconeClient.deleteIndex({
+      indexName,
+    });
 
-run();
+    console.log(`Index is deleted: ${indexName}`);
+  } catch (e) {
+    console.error(e?.toString());
+  }
+};

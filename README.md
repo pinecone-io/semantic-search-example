@@ -4,7 +4,7 @@ In this walkthrough we will see how to use Pinecone for semantic search. To begi
 
 ## Setup
 
-Ensure you have Node.js and `npm` installed. Clone the repository and install the dependencies using `npm install`.
+Ensure you have `Node.js` version 19.7.0 and `npm` version 9.5.0 installed. Clone the repository and install the dependencies using `npm install`.
 
 ### Configuration
 
@@ -14,6 +14,14 @@ Create an `.env` file in the root of the project and add your Pinecone API key a
 PINECONE_API_KEY=<your-api-key>
 PINECONE_ENVIRONMENT=<your-environment>
 PINECONE_INDEX=<index-name>
+```
+
+### Building
+
+To build the project please run the command:
+
+```sh
+npm run build
 ```
 
 ## Application structure
@@ -32,8 +40,13 @@ async function loadCSVFile(
   filePath: string
 ): Promise<Papa.ParseResult<Record<string, unknown>>> {
   try {
+    // Get csv file absolute path
     const csvAbsolutePath = await fs.realpath(filePath);
+
+    // Create a readable stream from the CSV file
     const data = await fs.readFile(csvAbsolutePath, "utf8");
+
+    // Parse the CSV file
     return await Papa.parse(data, {
       dynamicTyping: true,
       header: true,
@@ -45,7 +58,7 @@ async function loadCSVFile(
   }
 }
 
-export { loadCSVFile };
+export default loadCSVFile;
 ```
 
 ## Building embeddings
@@ -76,7 +89,6 @@ class Embedder {
         text,
       },
       values: Array.from(result.data),
-      // values: [],
     };
   }
 
@@ -92,7 +104,7 @@ class Embedder {
       const embeddings = await Promise.all(
         batch.map((text) => this.embed(text))
       );
-      onDoneBatch(embeddings);
+      await onDoneBatch(embeddings);
     }
   }
 }
@@ -133,7 +145,7 @@ export const getPineconeClient = async (): Promise<PineconeClient> => {
 };
 ```
 
-## Indexing
+## Loading embeddings into Pinecone
 
 Now that we have a way to load data and create embeddings, let put the two together and save the embeddings in Pinecone. In the following section, we get the path of the file we need to process from the command like. We load the CSV file, create the Pinecone index and then start the embedding process. The embedding process is done in batches of 1000. Once we have a batch of embeddings, we insert them into the index.
 
@@ -145,7 +157,7 @@ import loadCSVFile from "./csvLoader.js";
 
 import { embedder } from "./embeddings.js";
 import { getPineconeClient } from "./pinecone.js";
-import { getEnv, getIndexingCommandLineArguments } from "./utils/util.js";
+import { getEnv } from "./utils/util.js";
 const { createIndexIfNotExists, chunkedUpsert } = utils;
 config();
 
@@ -153,12 +165,12 @@ const progressBar = new cliProgress.SingleBar(
   {},
   cliProgress.Presets.shades_classic
 );
-const indexName = getEnv("PINECONE_INDEX");
+
 let counter = 0;
 
-const run = async () => {
-  // Get the CSV path and column name from the command line arguments
-  const { csvPath, column } = getIndexingCommandLineArguments();
+export const load = async (csvPath: string, column: string) => {
+  // Get index name
+  const indexName = getEnv("PINECONE_INDEX");
 
   // Get a PineconeClient instance
   const pineconeClient = await getPineconeClient();
@@ -186,9 +198,9 @@ const run = async () => {
 
   // Start the batch embedding process
   await embedder.init();
-  await embedder.embedBatch(documents, 1000, async (embeddings) => {
+  await embedder.embedBatch(documents, 1, async (embeddings) => {
     counter += embeddings.length;
-    //Whenever the batch embedding process returns a batch of embeddings, insert them into the index
+    // Whenever the batch embedding process returns a batch of embeddings, insert them into the index
     await chunkedUpsert(index, embeddings, "default");
     progressBar.update(counter);
   });
@@ -196,14 +208,12 @@ const run = async () => {
   progressBar.stop();
   console.log(`Inserted ${documents.length} documents into index ${indexName}`);
 };
-
-run();
 ```
 
-To run the indexer, use the following command:
+To run the script for loading data into pinecone database, use the following command:
 
 ```sh
-npm run index -- --csvPath=<path-to-csv-file> --column=<column-name>
+npm start -- load --csvPath=<path-to-csv-file> --column=<column-name>
 ```
 
 To test our search engine, we'll use the `test.csv` found in the same repo. This file has two columns (`question1` and `question2`) which include similar questions.
@@ -211,13 +221,13 @@ To test our search engine, we'll use the `test.csv` found in the same repo. This
 To index both columns, we'll run:
 
 ```sh
-npm run index -- --csvPath=test.csv --column=question1
+npm start -- load --csvPath=test.csv --column=question1
 ```
 
 and
 
 ```sh
-npm run index -- --csvPath=test.csv --column=question2
+npm start -- load --csvPath=test.csv --column=question2
 ```
 
 The indexer will set up the index, wait for it to initialize, and then start the embedding process. We should see something like this when then indexer is working:
@@ -238,19 +248,14 @@ Now that our index is populated we can begin making queries. We are performing a
 import { config } from "dotenv";
 import { embedder } from "./embeddings.js";
 import { getPineconeClient } from "./pinecone.js";
-import {
-  getEnv,
-  getQueryingCommandLineArguments,
-  validateEnvironmentVariables,
-} from "./utils/util.js";
+import { getEnv, validateEnvironmentVariables } from "./utils/util.js";
 
 config();
-const indexName = getEnv("PINECONE_INDEX");
 
-const run = async () => {
+export const query = async (query: string, topK: number) => {
+  const indexName = getEnv("PINECONE_INDEX");
   validateEnvironmentVariables();
   const pineconeClient = await getPineconeClient();
-  const { query, topK } = getQueryingCommandLineArguments();
 
   // Insert the embeddings into the index
   const index = pineconeClient.Index(indexName);
@@ -279,8 +284,6 @@ const run = async () => {
     }))
   );
 };
-
-run();
 ```
 
 The querying process is very similar to the indexing process. We create a Pinecone client, select the index we want to query, and then embed the query. We then use the `query` method to search the index for the most similar embeddings. The `query` method returns a list of matches. Each match contains the metadata associated with the embedding, as well as the score of the match.
@@ -288,7 +291,7 @@ The querying process is very similar to the indexing process. We create a Pineco
 Let's run some queries and see what we get:
 
 ```sh
-npm run query -- --query="which city has the highest population in the world?" --topK=2
+npm start -- query --query="which city has the highest population in the world?" --topK=2
 ```
 
 The result for this will be something like:
@@ -309,7 +312,7 @@ The result for this will be something like:
 These are clearly very relevant results. All of these questions either share the exact same meaning as our question, or are related. We can make this harder by using more complicated language, but as long as the "meaning" behind our query remains the same, we should see similar results.
 
 ```sh
- npm run query -- --query="which urban locations have the highest concentration of homo sapiens?" --topK=2
+ npm start -- query --query="which urban locations have the highest concentration of homo sapiens?" --topK=2
 ```
 
 And the result:
@@ -334,5 +337,5 @@ Despite these very different terms and lack of term overlap between query and re
 You can go ahead and ask more questions above. When you're done, delete the index to save resources:
 
 ```sh
-npm run delete
+npm start -- delete
 ```
