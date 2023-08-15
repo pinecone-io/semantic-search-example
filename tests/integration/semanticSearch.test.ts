@@ -5,13 +5,13 @@ import { createMockOnProcessExit, randomizeIndexName } from "../utils/index.js";
 describe(
   "Semantic Search",
   () => {
-    const originalEnv = process.env;
-    const originalArgv = process.argv;
+    const originalEnv = { ...process.env };
+    const originalArgv = { ...process.argv };
 
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     const consoleMock = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    // In case our test fails it will be reruned. 
+    // In case our test fails it will be reruned.
     // We whant to ensure that we are using new index but keep track of previus ones
     // so we are able to clean after tests are done
     const createdIndexes: string[] = [];

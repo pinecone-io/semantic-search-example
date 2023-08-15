@@ -1,0 +1,31 @@
+name: Regular Check
+on:
+  schedule:
+    #Run at 10:10 on Monday.
+    - cron: "10 10 * * MON"
+  workflow_dispatch: {}
+  workflow_call:
+    secrets:
+      PINECONE_API_KEY:
+        required: true
+      PINECONE_ENVIRONMENT:
+        required: true
+jobs:
+  run-integration-tests:
+    name: Integration tests
+    runs-on: macos-latest
+    permissions:
+      # Required to checkout the code
+      contents: read
+      # Required to put a comment into the pull-request
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Run integration tests
+        uses: ./.github/actions/integrationTests
+        with:
+          PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+          PINECONE_ENVIRONMENT: ${{ secrets.PINECONE_ENVIRONMENT }}
