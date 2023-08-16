@@ -89,6 +89,8 @@ export const run = async () => {
 };
 
 // In case it is not test enviroment run automaticly
+/* c8 ignore start */
 if (typeof vitest === "undefined") {
   run();
 }
+/* c8 ignore end */
