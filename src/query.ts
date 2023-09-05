@@ -1,30 +1,31 @@
 import { config } from "dotenv";
 import { embedder } from "./embeddings.js";
-import { getPineconeClient } from "./pinecone.js";
+import { Pinecone } from "@pinecone-database/pinecone";
 import { getEnv, validateEnvironmentVariables } from "./utils/util.js";
+import type { TextMetadata } from "./types.js";
 
 config();
+validateEnvironmentVariables();
 
 export const query = async (query: string, topK: number) => {
-  const indexName = getEnv("PINECONE_INDEX");
   validateEnvironmentVariables();
-  const pineconeClient = await getPineconeClient();
+  const pinecone = new Pinecone();
 
-  // Insert the embeddings into the index
-  const index = pineconeClient.Index(indexName);
+  // Target the index
+  const indexName = getEnv("PINECONE_INDEX");
+  const index = pinecone.index<TextMetadata>(indexName);
+
   await embedder.init();
+
   // Embed the query
   const queryEmbedding = await embedder.embed(query);
 
-  // Query the index
+  // Query the index using the query embedding
   const results = await index.query({
-    queryRequest: {
-      vector: queryEmbedding.values,
-      topK,
-      includeMetadata: true,
-      includeValues: false,
-      namespace: "default",
-    },
+    vector: queryEmbedding.values,
+    topK,
+    includeMetadata: true,
+    includeValues: false,
   });
 
   // Print the results

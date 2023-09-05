@@ -1,5 +1,4 @@
-import { utils } from "@pinecone-database/pinecone";
-import { getPineconeClient } from "@src/pinecone.js";
+import { Pinecone } from "@pinecone-database/pinecone";
 import { deleteIndex } from "@src/deleteIndex.js";
 import { randomizeIndexName } from "../utils/index.js";
 
@@ -14,9 +13,12 @@ describe("Delete", () => {
       process.env.PINECONE_INDEX = INDEX_NAME;
 
       try {
-        const pineconeClient = await getPineconeClient();
+        const pinecone = new Pinecone();
 
-        await utils.createIndexIfNotExists(pineconeClient, INDEX_NAME, 384);
+        const indexList = await pinecone.listIndexes();
+        if (indexList.indexOf({ name: INDEX_NAME }) === -1) {
+          await pinecone.createIndex({ name: INDEX_NAME, dimension: 384, waitUntilReady: true })
+        }
       } catch (error) {
         console.error(error);
       }

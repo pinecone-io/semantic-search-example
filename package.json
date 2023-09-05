@@ -13,10 +13,11 @@
     "dev": "ts-node src",
     "lint": "eslint src",
     "format": "npx prettier --write src && npx sort-package-json",
-    "format:check": "npx prettier --check src"
+    "format:check": "npx prettier --check src",
+    "install:dev": "rm -rf node_modules/@pinecone-database/pinecone && mkdir -p node_modules/@pinecone-database/pinecone/dist && cp -r ../pinecone-ts-client/dist node_modules/@pinecone-database/pinecone/dist && cp -r ../pinecone-ts-client/package.json node_modules/@pinecone-database/pinecone"
   },
   "dependencies": {
-    "@pinecone-database/pinecone": "^0.1.6",
+    "@pinecone-database/pinecone": "file:../pinecone-ts-client",
     "@xenova/transformers": "2.0.1",
     "cli-progress": "^3.12.0",
     "dotenv": "^16.0.3",
@@ -47,7 +48,7 @@
     "vitest": "^0.34.1"
   },
   "engines": {
-    "node": "19.7.0",
+    "node": "^18.0.0",
     "npm": "9.5.0",
     "pnpm": "Please use npm 9.5.1",
     "yarn": "Please use npm 9.5.1"

@@ -1,4 +1,4 @@
-import { getPineconeClient } from "@src/pinecone.js";
+import { Pinecone } from '@pinecone-database/pinecone';
 import { run } from "@src/index.js";
 import { createMockOnProcessExit, randomizeIndexName } from "../utils/index.js";
 
@@ -31,8 +31,8 @@ describe(
       await Promise.all(
         createdIndexes.map(async (indexName) => {
           try {
-            const pineconeClient = await getPineconeClient();
-            await pineconeClient.deleteIndex({ indexName: indexName });
+            const pinecone = new Pinecone();
+            await pinecone.deleteIndex(indexName);
           } catch (e) {
             console.error(e);
           }
@@ -57,12 +57,10 @@ describe(
 
       await run();
 
-      const client = await getPineconeClient();
-      const index = client.Index(indexName);
+      const pinecone = new Pinecone();
+      const index = pinecone.index(indexName);
       const stats = await index
-        .describeIndexStats({
-          describeIndexStatsRequest: {},
-        })
+        .describeIndexStats()
         .catch((e) => console.error(e));
 
       // Ensure that all vectors are added
