@@ -64,7 +64,7 @@ describe(
         .catch((e) => console.error(e));
 
       // Ensure that all vectors are added
-      expect(stats?.namespaces?.default.vectorCount).toBe(4);
+      expect(stats?.namespaces?.default.recordCount).toBe(4);
 
       // Set environment for querying
       process.argv = [
