@@ -26,8 +26,11 @@ describe("Delete", () => {
     5 * 60 * 1000
   );
 
-  afterAll(() => {
+  afterAll(async () => {
     consoleMock.mockReset();
+
+    const pinecone = new Pinecone()
+    await pinecone.deleteIndex(INDEX_NAME);
   });
 
   it("should delete Pinecone index", async () => {
