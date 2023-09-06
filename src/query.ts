@@ -31,8 +31,6 @@ export const query = async (query: string, topK: number) => {
   // Print the results
   console.log(
     results.matches?.map((match) => ({
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
       text: match.metadata?.text,
       score: match.score,
     }))

@@ -202,7 +202,6 @@ export const load = async (csvPath: string, column: string) => {
   await embedder.init();
   await embedder.embedBatch(documents, 100, async (embeddings) => {
     counter += embeddings.length;
-    console.log(embeddings.length)
     // Whenever the batch embedding process returns a batch of embeddings, insert them into the index
     await index.upsert(embeddings)
     progressBar.update(counter);
