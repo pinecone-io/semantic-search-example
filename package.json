@@ -13,8 +13,7 @@
     "dev": "ts-node src",
     "lint": "eslint src",
     "format": "npx prettier --write src && npx sort-package-json",
-    "format:check": "npx prettier --check src",
-    "install:dev": "rm -rf node_modules/@pinecone-database/pinecone && mkdir -p node_modules/@pinecone-database/pinecone/dist && cp -r ../pinecone-ts-client/dist node_modules/@pinecone-database/pinecone/dist && cp -r ../pinecone-ts-client/package.json node_modules/@pinecone-database/pinecone"
+    "format:check": "npx prettier --check src"
   },
   "dependencies": {
     "@pinecone-database/pinecone": "^0.1.6-dev.20230906074328",
