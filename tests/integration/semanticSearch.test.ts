@@ -116,14 +116,12 @@ describe(
       mockExit.mockRestore();
     });
 
-    it("should log an error if delte is called without valid index name", async () => {
-      setIndexName("some-non-exiting-index");
+    it("should log an error if delete is called without valid index name", async () => {
+      setIndexName("some-non-existing-index");
       process.argv = ["node", "../../src/index", "delete"];
 
       await run();
-      expect(consoleMock).toHaveBeenCalledWith(
-        "PineconeError: PineconeClient: Error calling deleteIndex: 404: Not Found"
-      );
+      expect(consoleMock).toHaveBeenCalledWith(expect.stringContaining("PineconeNotFoundError"));
     });
   },
   // Set timeout to 5 mins, becouse creating index can take time
