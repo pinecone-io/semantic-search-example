@@ -8,11 +8,6 @@ describe("Delete", () => {
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   const consoleMock = vi.spyOn(console, "log").mockImplementation(() => {});
 
-  beforeAll(async () => {
-    const pinecone = new Pinecone()
-    await pinecone.deleteIndex(INDEX_NAME);
-  })
-
   beforeEach(
     async () => {
       process.env.PINECONE_INDEX = INDEX_NAME;
@@ -33,9 +28,6 @@ describe("Delete", () => {
 
   afterAll(async () => {
     consoleMock.mockReset();
-
-    const pinecone = new Pinecone()
-    await pinecone.deleteIndex(INDEX_NAME);
   });
 
   it("should delete Pinecone index", async () => {
