@@ -5,8 +5,7 @@ In this walkthrough we will see how to use Pinecone for semantic search.
 ## Setup
 
 Prerequisites:
-- `Node.js` version 19.7.0 
-- `npm` version 9.5.0
+- `Node.js` version >=18.0.0
 
 Clone the repository and install the dependencies.
 
