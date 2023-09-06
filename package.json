@@ -48,8 +48,8 @@
     "vitest": "^0.34.1"
   },
   "engines": {
-    "node": "^18.0.0",
-    "npm": "^9.5.0",
+    "node": ">=18.0.0",
+    "npm": ">=9.5.0",
     "pnpm": "Please use npm 9.5.1",
     "yarn": "Please use npm 9.5.1"
   }
