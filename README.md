@@ -85,11 +85,11 @@ export default loadCSVFile;
 The text embedding operation is performed in the `Embedder` class. This class uses a pipeline from the [`@xenova/transformers`](https://github.com/xenova/transformers.js) library to generate embeddings for the input text. We use the [`sentence-transformers/all-MiniLM-L6-v2`](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) model to generate the embeddings. The class provides methods to embed a single string or an array of strings in batches​ - which will come in useful a bit later.
 
 ```typescript
-import { PineconeRecord } from "@pinecone-database/pinecone";
+import type { PineconeRecord } from "@pinecone-database/pinecone";
+import type { TextMetadata } from "./types.js";
 import { Pipeline } from "@xenova/transformers";
 import { v4 as uuidv4 } from "uuid";
 import { sliceIntoChunks } from "./utils/util.js";
-import { TextMetadata } from "./types.js";
 
 class Embedder {
   private pipe: Pipeline | null = null;

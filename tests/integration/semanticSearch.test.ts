@@ -68,11 +68,14 @@ describe(
       const pinecone = new Pinecone();
       const index = pinecone.index(indexName);
       const stats = await index
-        .describeIndexStats()
-        .catch((e) => console.error(e));
+        .describeIndexStats();
 
       // Ensure that all vectors are added
-      expect(stats?.namespaces?.default.recordCount).toBe(4);
+      if (stats.namespaces) {
+        const defaultNamespaceStats = stats.namespaces['']
+        expect(defaultNamespaceStats.recordCount).toEqual(4);
+      }
+      expect(stats.totalRecordCount).toEqual(4);
 
       // Set environment for querying
       process.argv = [
