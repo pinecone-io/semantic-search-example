@@ -1,4 +1,4 @@
-import { getPineconeClient } from "@src/pinecone.js";
+import { Pinecone } from '@pinecone-database/pinecone';
 import { run } from "@src/index.js";
 import { createMockOnProcessExit, randomizeIndexName } from "../utils/index.js";
 
@@ -22,6 +22,14 @@ describe(
       return indexName;
     };
 
+    beforeAll(async () => {
+      const pinecone = new Pinecone();
+      const listIndexes = pinecone.listIndexes();
+      for (const indexName in listIndexes) {
+        await pinecone.deleteIndex(indexName)
+      }
+    });
+
     afterEach(() => {
       process.argv = originalArgv;
     });
@@ -31,8 +39,8 @@ describe(
       await Promise.all(
         createdIndexes.map(async (indexName) => {
           try {
-            const pineconeClient = await getPineconeClient();
-            await pineconeClient.deleteIndex({ indexName: indexName });
+            const pinecone = new Pinecone();
+            await pinecone.deleteIndex(indexName);
           } catch (e) {
             console.error(e);
           }
@@ -57,16 +65,17 @@ describe(
 
       await run();
 
-      const client = await getPineconeClient();
-      const index = client.Index(indexName);
+      const pinecone = new Pinecone();
+      const index = pinecone.index(indexName);
       const stats = await index
-        .describeIndexStats({
-          describeIndexStatsRequest: {},
-        })
-        .catch((e) => console.error(e));
+        .describeIndexStats();
 
       // Ensure that all vectors are added
-      expect(stats?.namespaces?.default.vectorCount).toBe(4);
+      if (stats.namespaces) {
+        const defaultNamespaceStats = stats.namespaces['']
+        expect(defaultNamespaceStats.recordCount).toEqual(4);
+      }
+      expect(stats.totalRecordCount).toEqual(4);
 
       // Set environment for querying
       process.argv = [
@@ -110,14 +119,12 @@ describe(
       mockExit.mockRestore();
     });
 
-    it("should log an error if delte is called without valid index name", async () => {
-      setIndexName("some-non-exiting-index");
+    it("should log an error if delete is called without valid index name", async () => {
+      setIndexName("some-non-existing-index");
       process.argv = ["node", "../../src/index", "delete"];
 
       await run();
-      expect(consoleMock).toHaveBeenCalledWith(
-        "PineconeError: PineconeClient: Error calling deleteIndex: 404: Not Found"
-      );
+      expect(consoleMock).toHaveBeenCalledWith(expect.stringContaining("PineconeNotFoundError"));
     });
   },
   // Set timeout to 5 mins, becouse creating index can take time

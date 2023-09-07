@@ -1,4 +1,5 @@
-import { Vector } from "@pinecone-database/pinecone";
+import type { PineconeRecord } from "@pinecone-database/pinecone";
+import type { TextMetadata } from "./types.js";
 import { Pipeline } from "@xenova/transformers";
 import { v4 as uuidv4 } from "uuid";
 import { sliceIntoChunks } from "./utils/util.js";
@@ -13,7 +14,7 @@ class Embedder {
   }
 
   // Embed a single string
-  async embed(text: string): Promise<Vector> {
+  async embed(text: string): Promise<PineconeRecord<TextMetadata>> {
     const result = this.pipe && (await this.pipe(text));
     return {
       id: uuidv4(),
@@ -29,7 +30,7 @@ class Embedder {
   async embedBatch(
     texts: string[],
     batchSize: number,
-    onDoneBatch: (embeddings: Vector[]) => void
+    onDoneBatch: (embeddings: PineconeRecord<TextMetadata>[]) => void
   ) {
     const batches = sliceIntoChunks<string>(texts, batchSize);
     for (const batch of batches) {

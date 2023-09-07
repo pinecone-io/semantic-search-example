@@ -30,7 +30,7 @@ describe("Load", () => {
     process.env = {};
 
     await expect(load("non-existing.csv", "question1")).rejects.toThrow(
-      "PINECONE_INDEX environment variable not set"
+      "PINECONE_API_KEY environment variable not set"
     );
   });
 });

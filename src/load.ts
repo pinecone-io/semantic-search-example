@@ -1,12 +1,14 @@
-import { utils } from "@pinecone-database/pinecone";
 import cliProgress from "cli-progress";
 import { config } from "dotenv";
 import loadCSVFile from "./csvLoader.js";
 
 import { embedder } from "./embeddings.js";
-import { getPineconeClient } from "./pinecone.js";
-import { getEnv } from "./utils/util.js";
-const { createIndexIfNotExists, chunkedUpsert } = utils;
+import { Pinecone } from "@pinecone-database/pinecone";
+import { getEnv, validateEnvironmentVariables } from "./utils/util.js";
+
+import type { TextMetadata } from "./types.js";
+
+// Load environment variables from .env
 config();
 
 const progressBar = new cliProgress.SingleBar(
@@ -17,11 +19,10 @@ const progressBar = new cliProgress.SingleBar(
 let counter = 0;
 
 export const load = async (csvPath: string, column: string) => {
-  // Get index name
-  const indexName = getEnv("PINECONE_INDEX");
+  validateEnvironmentVariables();
 
-  // Get a PineconeClient instance
-  const pineconeClient = await getPineconeClient();
+  // Get a Pinecone instance
+  const pinecone = new Pinecone();
 
   // Create a readable stream from the CSV file
   const { data, meta } = await loadCSVFile(csvPath);
@@ -35,21 +36,36 @@ export const load = async (csvPath: string, column: string) => {
   // Extract the selected column from the CSV file
   const documents = data.map((row) => row[column] as string);
 
-  // Create a Pinecone index with the name "word-embeddings" and a dimension of 384
-  await createIndexIfNotExists(pineconeClient, indexName, 384);
+  // Get index name
+  const indexName = getEnv("PINECONE_INDEX");
 
-  // Select the target Pinecone index
-  const index = pineconeClient.Index(indexName);
+  // Check whether the index already exists. If it doesn't, create
+  // a Pinecone index with a dimension of 384 to hold the outputs
+  // of our embeddings model.
+  const indexList = await pinecone.listIndexes();
+  if (indexList.indexOf({ name: indexName }) === -1) {
+    await pinecone.createIndex({
+      name: indexName,
+      dimension: 384,
+      waitUntilReady: true,
+    });
+  }
+
+  // Select the target Pinecone index. Passing the TextMetadata generic type parameter
+  // allows typescript to know what shape to expect when interacting with a record's
+  // metadata field without the need for additional type casting.
+  const index = pinecone.index<TextMetadata>(indexName);
 
   // Start the progress bar
   progressBar.start(documents.length, 0);
 
   // Start the batch embedding process
   await embedder.init();
-  await embedder.embedBatch(documents, 1, async (embeddings) => {
+  await embedder.embedBatch(documents, 100, async (embeddings) => {
     counter += embeddings.length;
+    console.log(embeddings.length);
     // Whenever the batch embedding process returns a batch of embeddings, insert them into the index
-    await chunkedUpsert(index, embeddings, "default");
+    await index.upsert(embeddings);
     progressBar.update(counter);
   });
 
