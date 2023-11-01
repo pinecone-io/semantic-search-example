@@ -43,7 +43,7 @@ export const load = async (csvPath: string, column: string) => {
   // a Pinecone index with a dimension of 384 to hold the outputs
   // of our embeddings model.
   const indexList = await pinecone.listIndexes();
-  if (indexList.indexOf({ name: indexName }) === -1) {
+  if (indexList.findIndex((index) => index.name === indexName) === -1) {
     await pinecone.createIndex({
       name: indexName,
       dimension: 384,
