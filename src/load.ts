@@ -47,6 +47,7 @@ export const load = async (csvPath: string, column: string) => {
     await pinecone.createIndex({
       name: indexName,
       dimension: 384,
+      metric: "cosine",
       waitUntilReady: true,
     });
   }
