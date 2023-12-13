@@ -15,14 +15,22 @@ describe("Delete", () => {
       try {
         const pinecone = new Pinecone();
 
-        const indexList = await pinecone.listIndexes();
-        if (indexList.indexOf({ name: INDEX_NAME }) === -1) {
-          await pinecone.createIndex({ name: INDEX_NAME, dimension: 384, waitUntilReady: true })
-        }
+        await pinecone.createIndex({
+          name: INDEX_NAME,
+          dimension: 384,
+          spec: {
+            serverless: {
+              region: "us-west-2",
+              cloud: "aws",
+            },
+          },
+          waitUntilReady: true,
+          suppressConflicts: true,
+        });
       } catch (error) {
         console.error(error);
       }
-    }, // Set timeout to 5 mins, becouse creating index can take time
+    }, // Set timeout to 5 mins, because creating index can take time
     5 * 60 * 1000
   );
 

@@ -1,4 +1,4 @@
-import { Pinecone } from '@pinecone-database/pinecone';
+import { Pinecone } from "@pinecone-database/pinecone";
 import { run } from "@src/index.js";
 import { createMockOnProcessExit, randomizeIndexName } from "../utils/index.js";
 
@@ -11,9 +11,9 @@ describe(
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     const consoleMock = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    // In case our test fails it will be reruned.
-    // We whant to ensure that we are using new index but keep track of previus ones
-    // so we are able to clean after tests are done
+    // In case our test fails it will be rerun.
+    // We want to ensure that we are using new index, and we keep track
+    // of previous indexes so we can clean up when we're done.
     const createdIndexes: string[] = [];
     const setIndexName = (name: string) => {
       const indexName = randomizeIndexName(name);
@@ -26,7 +26,7 @@ describe(
       const pinecone = new Pinecone();
       const listIndexes = pinecone.listIndexes();
       for (const indexName in listIndexes) {
-        await pinecone.deleteIndex(indexName)
+        await pinecone.deleteIndex(indexName);
       }
     });
 
@@ -67,12 +67,21 @@ describe(
 
       const pinecone = new Pinecone();
       const index = pinecone.index(indexName);
-      const stats = await index
-        .describeIndexStats();
+      let stats = await index.describeIndexStats();
+
+      // Records can take some time to become available in the index after upsert
+      // so we wait until the namespace is populated before moving on to asserts
+      while (
+        (stats.namespaces && !stats.namespaces[""]) ||
+        (stats.namespaces && stats.namespaces[""].recordCount === 0)
+      ) {
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        stats = await index.describeIndexStats();
+      }
 
       // Ensure that all vectors are added
       if (stats.namespaces) {
-        const defaultNamespaceStats = stats.namespaces['']
+        const defaultNamespaceStats = stats.namespaces[""];
         expect(defaultNamespaceStats.recordCount).toEqual(4);
       }
       expect(stats.totalRecordCount).toEqual(4);
@@ -124,9 +133,11 @@ describe(
       process.argv = ["node", "../../src/index", "delete"];
 
       await run();
-      expect(consoleMock).toHaveBeenCalledWith(expect.stringContaining("PineconeNotFoundError"));
+      expect(consoleMock).toHaveBeenCalledWith(
+        expect.stringContaining("PineconeNotFoundError")
+      );
     });
   },
-  // Set timeout to 5 mins, becouse creating index can take time
+  // Set timeout to 5 mins, because creating index can take time
   5 * 60 * 1000
 );
