@@ -25,11 +25,10 @@ Copy the template file:
 cp .env.example .env
 ```
 
-And fill in your API key and environment details:
+And fill in your API key and index name:
 
 ```sh
 PINECONE_API_KEY=<your-api-key>
-PINECONE_ENVIRONMENT=<your-environment>
 PINECONE_INDEX=semantic-search
 ```
 
