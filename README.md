@@ -25,11 +25,10 @@ Copy the template file:
 cp .env.example .env
 ```
 
-And fill in your API key and environment details:
+And fill in your API key and index name:
 
 ```sh
 PINECONE_API_KEY=<your-api-key>
-PINECONE_ENVIRONMENT=<your-environment>
 PINECONE_INDEX=semantic-search
 ```
 
@@ -181,13 +180,20 @@ export const load = async (csvPath: string, column: string) => {
   // Get index name
   const indexName = getEnv("PINECONE_INDEX");
 
-  // Check whether the index already exists. If it doesn't, create 
-  // a Pinecone index with a dimension of 384 to hold the outputs
-  // of our embeddings model.
-  const indexList = await pinecone.listIndexes();
-  if (indexList.indexOf({ name: indexName }) === -1) {
-    await pinecone.createIndex({ name: indexName, dimension: 384, waitUntilReady: true })
-  }
+  // Create a Pinecone index with a dimension of 384 to hold the outputs
+  // of our embeddings model. Use suppressConflicts in case the index already exists.
+  await pinecone.createIndex({
+    name: indexName,
+    dimension: 384,
+    spec: {
+      serverless: {
+        region: "us-west-2",
+        cloud: "aws",
+      },
+    },
+    waitUntilReady: true,
+    suppressConflicts: true,
+  });
 
   // Select the target Pinecone index. Passing the TextMetadata generic type parameter
   // allows typescript to know what shape to expect when interacting with a record's
