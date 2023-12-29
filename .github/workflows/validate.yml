@@ -7,8 +7,6 @@ on:
     secrets:
       PINECONE_API_KEY:
         required: true
-      PINECONE_ENVIRONMENT:
-        required: true
 
 jobs:
   basic-hygiene:
@@ -49,4 +47,3 @@ jobs:
         uses: ./.github/actions/integrationTests
         with:
           PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
-          PINECONE_ENVIRONMENT: ${{ secrets.PINECONE_ENVIRONMENT }}
