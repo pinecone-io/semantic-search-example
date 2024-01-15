@@ -13,6 +13,8 @@ runs:
         CI: true
         PINECONE_API_KEY: ${{ inputs.pinecone_api_key }}
         PINECONE_INDEX: "semantic-search-testing"
+        PINECONE_CLOUD: "aws"
+        PINECONE_REGION: "us-west-2"
       run: npm run test
     - name: "Report Coverage"
       if: always() # Also generate the report if tests are failing
