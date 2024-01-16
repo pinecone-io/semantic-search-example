@@ -3,7 +3,10 @@ import { config } from "dotenv";
 import loadCSVFile from "./csvLoader.js";
 
 import { embedder } from "./embeddings.js";
-import { Pinecone } from "@pinecone-database/pinecone";
+import {
+  Pinecone,
+  type ServerlessSpecCloudEnum,
+} from "@pinecone-database/pinecone";
 import { getEnv, validateEnvironmentVariables } from "./utils/util.js";
 
 import type { TextMetadata } from "./types.js";
@@ -36,8 +39,10 @@ export const load = async (csvPath: string, column: string) => {
   // Extract the selected column from the CSV file
   const documents = data.map((row) => row[column] as string);
 
-  // Get index name
+  // Get index name, cloud, and region
   const indexName = getEnv("PINECONE_INDEX");
+  const indexCloud = getEnv("PINECONE_CLOUD") as ServerlessSpecCloudEnum;
+  const indexRegion = getEnv("PINECONE_REGION");
 
   // Create a Pinecone index with a dimension of 384 to hold the outputs
   // of our embeddings model. Use suppressConflicts in case the index already exists.
@@ -46,8 +51,8 @@ export const load = async (csvPath: string, column: string) => {
     dimension: 384,
     spec: {
       serverless: {
-        region: "us-west-2",
-        cloud: "aws",
+        region: indexRegion,
+        cloud: indexCloud,
       },
     },
     waitUntilReady: true,
