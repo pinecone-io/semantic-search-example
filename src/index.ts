@@ -88,7 +88,7 @@ export const run = async () => {
   return parser.parse();
 };
 
-// In case it is not test enviroment run automaticly
+// In case it is not test enviroment run automatically
 /* c8 ignore start */
 if (typeof vitest === "undefined") {
   run();

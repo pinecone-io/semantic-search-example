@@ -4,9 +4,6 @@ inputs:
   pinecone_api_key:
     description: "API key"
     required: true
-  pinecone_environment:
-    description: "Environment/region to target"
-    required: true
 runs:
   using: "composite"
   steps:
@@ -15,8 +12,9 @@ runs:
       env:
         CI: true
         PINECONE_API_KEY: ${{ inputs.pinecone_api_key }}
-        PINECONE_ENVIRONMENT: ${{ inputs.pinecone_environment }}
         PINECONE_INDEX: "semantic-search-testing"
+        PINECONE_CLOUD: "aws"
+        PINECONE_REGION: "us-west-2"
       run: npm run test
     - name: "Report Coverage"
       if: always() # Also generate the report if tests are failing

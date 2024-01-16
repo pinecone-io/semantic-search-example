@@ -3,7 +3,10 @@ import { config } from "dotenv";
 import loadCSVFile from "./csvLoader.js";
 
 import { embedder } from "./embeddings.js";
-import { Pinecone } from "@pinecone-database/pinecone";
+import {
+  Pinecone,
+  type ServerlessSpecCloudEnum,
+} from "@pinecone-database/pinecone";
 import { getEnv, validateEnvironmentVariables } from "./utils/util.js";
 
 import type { TextMetadata } from "./types.js";
@@ -36,20 +39,25 @@ export const load = async (csvPath: string, column: string) => {
   // Extract the selected column from the CSV file
   const documents = data.map((row) => row[column] as string);
 
-  // Get index name
+  // Get index name, cloud, and region
   const indexName = getEnv("PINECONE_INDEX");
+  const indexCloud = getEnv("PINECONE_CLOUD") as ServerlessSpecCloudEnum;
+  const indexRegion = getEnv("PINECONE_REGION");
 
-  // Check whether the index already exists. If it doesn't, create
-  // a Pinecone index with a dimension of 384 to hold the outputs
-  // of our embeddings model.
-  const indexList = await pinecone.listIndexes();
-  if (indexList.indexOf({ name: indexName }) === -1) {
-    await pinecone.createIndex({
-      name: indexName,
-      dimension: 384,
-      waitUntilReady: true,
-    });
-  }
+  // Create a Pinecone index with a dimension of 384 to hold the outputs
+  // of our embeddings model. Use suppressConflicts in case the index already exists.
+  await pinecone.createIndex({
+    name: indexName,
+    dimension: 384,
+    spec: {
+      serverless: {
+        region: indexRegion,
+        cloud: indexCloud,
+      },
+    },
+    waitUntilReady: true,
+    suppressConflicts: true,
+  });
 
   // Select the target Pinecone index. Passing the TextMetadata generic type parameter
   // allows typescript to know what shape to expect when interacting with a record's

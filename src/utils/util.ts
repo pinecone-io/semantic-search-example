@@ -14,8 +14,9 @@ function getEnv(key: string): string {
 
 const validateEnvironmentVariables = () => {
   getEnv("PINECONE_API_KEY");
-  getEnv("PINECONE_ENVIRONMENT");
   getEnv("PINECONE_INDEX");
+  getEnv("PINECONE_CLOUD");
+  getEnv("PINECONE_REGION");
 };
 
 export { getEnv, sliceIntoChunks, validateEnvironmentVariables };
