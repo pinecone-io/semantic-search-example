@@ -65,8 +65,8 @@ describe(
       // Records can take some time to become available in the index after upsert
       // so we wait until the namespace is populated before moving on to asserts
       while (
-        (stats.namespaces && !stats.namespaces["__default__"]) ||
-        (stats.namespaces && stats.namespaces["__default__"].recordCount === 0)
+        (stats.namespaces && !stats.namespaces[""]) ||
+        (stats.namespaces && stats.namespaces[""].recordCount === 0)
       ) {
         console.log(`Index stats: ${JSON.stringify(stats)}`);
         await new Promise((resolve) => setTimeout(resolve, 3000));
