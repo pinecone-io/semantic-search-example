@@ -22,7 +22,7 @@ export const query = async (query: string, topK: number) => {
 
   // Query the index using the query embedding
   const results = await index.query({
-    vector: queryEmbedding.values,
+    vector: queryEmbedding.values || [],
     topK,
     includeMetadata: true,
     includeValues: false,
