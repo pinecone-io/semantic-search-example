@@ -70,14 +70,12 @@ describe(
       const index = pinecone.index(indexName);
       let stats = await index.describeIndexStats();
 
-      console.log(`stats: ${JSON.stringify(stats)}`);
       // Records can take some time to become available in the index after upsert
       // so we wait until the namespace is populated before moving on to asserts
       while (
         (stats.namespaces && !stats.namespaces[""]) ||
         (stats.namespaces && stats.namespaces[""].recordCount === 0)
       ) {
-        console.log(`stats: ${JSON.stringify(stats)}`);
         await new Promise((resolve) => setTimeout(resolve, 3000));
         stats = await index.describeIndexStats();
       }

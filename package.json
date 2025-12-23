@@ -12,7 +12,7 @@
     "test": "vitest run --coverage --retry 5",
     "dev": "ts-node src",
     "lint": "eslint src",
-    "format": "npx prettier --write src && npx sort-package-json",
+    "format": "npx prettier --write src",
     "format:check": "npx prettier --check src"
   },
   "dependencies": {
