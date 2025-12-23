@@ -24,9 +24,10 @@ describe(
 
     beforeAll(async () => {
       const pinecone = new Pinecone();
-      const listIndexes = pinecone.listIndexes();
-      for (const indexName in listIndexes) {
-        await pinecone.deleteIndex(indexName);
+      const listIndexes = await pinecone.listIndexes();
+      const indexes = listIndexes.indexes || [];
+      for (const index of indexes) {
+        await pinecone.deleteIndex(index.name);
       }
     });
 
