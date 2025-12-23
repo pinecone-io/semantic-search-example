@@ -22,15 +22,6 @@ describe(
       return indexName;
     };
 
-    beforeAll(async () => {
-      const pinecone = new Pinecone();
-      const listIndexes = await pinecone.listIndexes();
-      const indexes = listIndexes.indexes || [];
-      for (const index of indexes) {
-        await pinecone.deleteIndex(index.name);
-      }
-    });
-
     afterEach(() => {
       process.argv = originalArgv;
     });
