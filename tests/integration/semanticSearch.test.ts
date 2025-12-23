@@ -24,9 +24,10 @@ describe(
 
     beforeAll(async () => {
       const pinecone = new Pinecone();
-      const listIndexes = pinecone.listIndexes();
-      for (const indexName in listIndexes) {
-        await pinecone.deleteIndex(indexName);
+      const listIndexes = await pinecone.listIndexes();
+      const indexes = listIndexes.indexes || [];
+      for (const index of indexes) {
+        await pinecone.deleteIndex(index.name);
       }
     });
 
@@ -69,12 +70,14 @@ describe(
       const index = pinecone.index(indexName);
       let stats = await index.describeIndexStats();
 
+      console.log(`stats: ${JSON.stringify(stats)}`);
       // Records can take some time to become available in the index after upsert
       // so we wait until the namespace is populated before moving on to asserts
       while (
         (stats.namespaces && !stats.namespaces[""]) ||
         (stats.namespaces && stats.namespaces[""].recordCount === 0)
       ) {
+        console.log(`stats: ${JSON.stringify(stats)}`);
         await new Promise((resolve) => setTimeout(resolve, 3000));
         stats = await index.describeIndexStats();
       }
