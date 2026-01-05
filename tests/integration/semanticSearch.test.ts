@@ -22,6 +22,10 @@ describe(
       return indexName;
     };
 
+    const getDefaultNamespaceStats = async (
+      namespaces?: Record<string, { recordCount: number }>
+    ) => namespaces?.[""] ?? namespaces?.__default__;
+
     afterEach(() => {
       process.argv = originalArgv;
     });
@@ -64,10 +68,12 @@ describe(
 
       // Records can take some time to become available in the index after upsert
       // so we wait until the namespace is populated before moving on to asserts
-      while (
-        (stats.namespaces && !stats.namespaces[""]) ||
-        (stats.namespaces && stats.namespaces[""].recordCount === 0)
-      ) {
+      while (true) {
+        const defaultNs = await getDefaultNamespaceStats(stats.namespaces);
+        if (defaultNs && defaultNs.recordCount > 0) {
+          break;
+        }
+
         console.log(`Index stats: ${JSON.stringify(stats)}`);
         await new Promise((resolve) => setTimeout(resolve, 3000));
         stats = await index.describeIndexStats();
