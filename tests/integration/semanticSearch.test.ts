@@ -24,7 +24,7 @@ describe(
 
     const getDefaultNamespaceStats = async (
       namespaces?: Record<string, { recordCount: number }>
-    ) => namespaces?.[""] ?? namespaces?.__default__;
+    ) => namespaces?.[""] ?? namespaces?.["__default__"];
 
     afterEach(() => {
       process.argv = originalArgv;
@@ -81,8 +81,10 @@ describe(
 
       // Ensure that all vectors are added
       if (stats.namespaces) {
-        const defaultNamespaceStats = stats.namespaces[""];
-        expect(defaultNamespaceStats.recordCount).toEqual(4);
+        const defaultNamespaceStats = await getDefaultNamespaceStats(
+          stats.namespaces
+        );
+        expect(defaultNamespaceStats?.recordCount).toEqual(4);
       }
       expect(stats.totalRecordCount).toEqual(4);
 
