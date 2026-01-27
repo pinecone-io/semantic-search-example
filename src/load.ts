@@ -3,10 +3,7 @@ import { config } from "dotenv";
 import loadCSVFile from "./csvLoader.js";
 
 import { embedder } from "./embeddings.js";
-import {
-  Pinecone,
-  type ServerlessSpecCloudEnum,
-} from "@pinecone-database/pinecone";
+import { Pinecone } from "@pinecone-database/pinecone";
 import { getEnv, validateEnvironmentVariables } from "./utils/util.js";
 
 import type { TextMetadata } from "./types.js";
@@ -41,7 +38,7 @@ export const load = async (csvPath: string, column: string) => {
 
   // Get index name, cloud, and region
   const indexName = getEnv("PINECONE_INDEX");
-  const indexCloud = getEnv("PINECONE_CLOUD") as ServerlessSpecCloudEnum;
+  const indexCloud = getEnv("PINECONE_CLOUD");
   const indexRegion = getEnv("PINECONE_REGION");
 
   // Create a Pinecone index with a dimension of 384 to hold the outputs
@@ -73,7 +70,7 @@ export const load = async (csvPath: string, column: string) => {
     counter += embeddings.length;
     console.log(embeddings.length);
     // Whenever the batch embedding process returns a batch of embeddings, insert them into the index
-    await index.upsert(embeddings);
+    await index.upsert({ records: embeddings });
     progressBar.update(counter);
   });
 
