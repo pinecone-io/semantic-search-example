@@ -16,7 +16,7 @@
     "format:check": "npx prettier --check src"
   },
   "dependencies": {
-    "@pinecone-database/pinecone": "git+https://github.com/pinecone-io/pinecone-ts-client.git#adenoble/update-data-plane-namespace-targeting",
+    "@pinecone-database/pinecone": "^7.0.0",
     "@xenova/transformers": "2.0.1",
     "cli-progress": "^3.12.0",
     "dotenv": "^16.0.3",
