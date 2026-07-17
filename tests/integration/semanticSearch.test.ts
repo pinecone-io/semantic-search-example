@@ -1,8 +1,12 @@
+import {
+  createMockOnProcessExit,
+  hasPineconeCredentials,
+  randomizeIndexName,
+} from "../utils/index.js";
 import { Pinecone } from "@pinecone-database/pinecone";
 import { run } from "@src/index.js";
-import { createMockOnProcessExit, randomizeIndexName } from "../utils/index.js";
 
-describe(
+describe.skipIf(!hasPineconeCredentials)(
   "Semantic Search",
   () => {
     const originalEnv = { ...process.env };

@@ -1,8 +1,8 @@
+import { hasPineconeCredentials, randomizeIndexName } from "../utils/index.js";
 import { Pinecone } from "@pinecone-database/pinecone";
 import { deleteIndex } from "@src/deleteIndex.js";
-import { randomizeIndexName } from "../utils/index.js";
 
-describe("Delete", () => {
+describe.skipIf(!hasPineconeCredentials)("Delete", () => {
   const INDEX_NAME = randomizeIndexName("test-index-for-delete");
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
