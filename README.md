@@ -6,7 +6,7 @@ In this walkthrough we will see how to use Pinecone for semantic search.
 
 Prerequisites:
 
-- `Node.js` version >=18.0.0
+- `Node.js` version >=20.0.0
 
 Clone the repository and install the dependencies.
 
@@ -37,7 +37,7 @@ PINECONE_REGION="us-west-2"
 
 `PINECONE_INDEX` is the name of the index where this demo will store and query embeddings. You can change `PINECONE_INDEX` to any name you like, but make sure the name not going to collide with any indexes you are already using.
 
-`PINECONE_CLOUD` and `PINECONE_REGION` define where the index should be deployed. Currently, this is the only available cloud and region combination (`aws` and `us-west-2`), so it's recommended to leave them defaulted.
+`PINECONE_CLOUD` and `PINECONE_REGION` define where the index should be deployed. Pinecone serverless supports multiple cloud/region combinations; see the [Understanding indexes](https://docs.pinecone.io/guides/index-data/create-an-index) guide for the full, current list. The values above are provided as a working default.
 
 ### Building
 
@@ -140,7 +140,7 @@ export { embedder };
 
 ## Loading embeddings into Pinecone
 
-Now that we have a way to load data and create embeddings, let put the two together and save the embeddings in Pinecone. In the following section, we get the path of the file we need to process from the command like. We load the CSV file, create the Pinecone index and then start the embedding process. The embedding process is done in batches of 1000. Once we have a batch of embeddings, we insert them into the index.
+Now that we have a way to load data and create embeddings, let put the two together and save the embeddings in Pinecone. In the following section, we get the path of the file we need to process from the command like. We load the CSV file, create the Pinecone index and then start the embedding process. The embedding process is done in batches of 100. Once we have a batch of embeddings, we insert them into the index.
 
 ```typescript
 import cliProgress from 'cli-progress';
