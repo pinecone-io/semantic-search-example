@@ -15,32 +15,34 @@ permissions:
 
 jobs:
   basic-hygiene:
-    name: Linting, formatting, etc
-    runs-on: macos-latest
+    # Credential-free gate: runs on every PR, including from forks, since it
+    # never touches PINECONE_API_KEY. Covers formatting, linting, the
+    # typecheck/build, and the unit + mocked test layers.
+    name: Typecheck, lint, format, unit + mocked tests
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup
         uses: ./.github/actions/setup
       - name: Prettier
-        run: npm run format
-      - name: Check for prettier changes
-        run: |
-          git diff --exit-code >/dev/null 2>&1
-          EXIT_CODE=$?
-          if [ $EXIT_CODE -ne 0 ]; then
-            echo "Prettier changes detected. Please run 'npm run format' and commit the changes."
-            exit 1
-          fi
+        run: npm run format:check
       - name: ESLint
         run: npm run lint
+      - name: Typecheck / build
+        run: npx tsc
+      - name: Unit + mocked tests
+        run: npm run test
 
   run-integration-tests:
-    # Despite the job id, this runs the full vitest suite: unit + mocked tests
-    # (which need no credentials) plus the live integration tests, which
-    # self-skip when PINECONE_API_KEY isn't available (e.g. fork PRs).
-    name: Test suite (unit, mocked, integration)
-    runs-on: macos-latest
+    # Live tests against a real Pinecone project. Restricted to pushes to
+    # main, manual/workflow_call dispatch, and same-repo PRs (fork PRs don't
+    # have access to the PINECONE_API_KEY secret, so there's no point
+    # spending a runner on them); the suite also self-skips if the secret is
+    # unset, as a second line of defense.
+    name: Live integration tests
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
     permissions:
       # Required to checkout the code
       contents: read
@@ -48,9 +50,14 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup
         uses: ./.github/actions/setup
+      - name: Cache embedding model
+        uses: actions/cache@v4
+        with:
+          path: node_modules/@xenova/transformers/.cache
+          key: xenova-transformers-model-${{ hashFiles('package-lock.json') }}
       - name: Run tests
         uses: ./.github/actions/integrationTests
         with:
