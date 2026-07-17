@@ -8,6 +8,10 @@ on:
     secrets:
       PINECONE_API_KEY:
         required: true
+
+permissions:
+  contents: read
+
 jobs:
   run-integration-tests:
     name: Integration tests
