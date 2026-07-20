@@ -23,7 +23,7 @@
     "find-up": "^6.3.0",
     "onnxruntime-node": "^1.14.0",
     "papaparse": "^5.4.1",
-    "uuid": "^9.0.0",
+    "uuid": "^14.0.1",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
@@ -48,5 +48,8 @@
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "overrides": {
+    "adm-zip": "^0.6.0"
   }
 }
