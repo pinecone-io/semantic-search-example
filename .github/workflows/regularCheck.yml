@@ -15,7 +15,7 @@ permissions:
 jobs:
   run-integration-tests:
     name: Integration tests
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     permissions:
       # Required to checkout the code
       contents: read
@@ -23,9 +23,14 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup
         uses: ./.github/actions/setup
+      - name: Cache embedding model
+        uses: actions/cache@v4
+        with:
+          path: node_modules/@xenova/transformers/.cache
+          key: xenova-transformers-model-${{ hashFiles('package-lock.json') }}
       - name: Run integration tests
         uses: ./.github/actions/integrationTests
         with:
