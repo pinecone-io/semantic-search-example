@@ -1,7 +1,18 @@
 {
   "name": "pinecone-semantic-search",
   "version": "0.0.1",
-  "description": "",
+  "description": "Example Node.js/TypeScript app demonstrating semantic search over a CSV dataset using Pinecone.",
+  "keywords": [
+    "pinecone",
+    "vector-search",
+    "semantic-search",
+    "typescript",
+    "nodejs"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pinecone-io/semantic-search-example.git"
+  },
   "license": "MIT",
   "author": "Roie Schwaber-Cohen",
   "type": "module",
