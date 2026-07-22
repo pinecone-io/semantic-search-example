@@ -22,7 +22,7 @@ export const load = async (csvPath: string, column: string) => {
   validateEnvironmentVariables();
 
   // Get a Pinecone instance
-  const pinecone = new Pinecone();
+  const pinecone = new Pinecone({ apiKey: getEnv("PINECONE_API_KEY"), sourceTag: "pinecone:semantic_search_example" });
 
   // Create a readable stream from the CSV file
   const { data, meta } = await loadCSVFile(csvPath);

@@ -13,7 +13,7 @@ describe.skipIf(!hasPineconeCredentials)("Delete", () => {
       process.env.PINECONE_INDEX = INDEX_NAME;
 
       try {
-        const pinecone = new Pinecone();
+        const pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY as string, sourceTag: "pinecone:semantic_search_example" });
 
         await pinecone.createIndex({
           name: INDEX_NAME,
