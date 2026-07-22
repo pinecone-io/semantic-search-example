@@ -39,7 +39,7 @@ describe.skipIf(!hasPineconeCredentials)(
       await Promise.all(
         createdIndexes.map(async (indexName) => {
           try {
-            const pinecone = new Pinecone();
+            const pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY as string, sourceTag: "pinecone:semantic_search_example" });
             await pinecone.deleteIndex(indexName);
           } catch (e) {
             console.error(e);
@@ -65,7 +65,7 @@ describe.skipIf(!hasPineconeCredentials)(
 
       await run();
 
-      const pinecone = new Pinecone();
+      const pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY as string, sourceTag: "pinecone:semantic_search_example" });
       const index = pinecone.index(indexName);
       let stats = await index.describeIndexStats();
       console.log(`Index stats: ${JSON.stringify(stats)}`);
