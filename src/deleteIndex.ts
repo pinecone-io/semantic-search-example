@@ -8,7 +8,10 @@ validateEnvironmentVariables();
 export const deleteIndex = async () => {
   const indexName = getEnv("PINECONE_INDEX");
 
-  const pinecone = new Pinecone({ apiKey: getEnv("PINECONE_API_KEY"), sourceTag: "pinecone:semantic_search_example" });
+  const pinecone = new Pinecone({
+    apiKey: getEnv("PINECONE_API_KEY"),
+    sourceTag: "pinecone:semantic_search_example",
+  });
 
   try {
     await pinecone.deleteIndex(indexName);
