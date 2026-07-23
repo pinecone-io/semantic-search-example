@@ -1,10 +1,21 @@
 {
   "name": "pinecone-semantic-search",
   "version": "0.0.1",
-  "description": "",
+  "description": "A TypeScript example app that builds a semantic search pipeline over CSV data using Pinecone and Xenova/transformers embeddings.",
   "license": "MIT",
   "author": "Roie Schwaber-Cohen",
   "type": "module",
+  "keywords": [
+    "pinecone",
+    "vector-search",
+    "semantic-search",
+    "typescript",
+    "nodejs"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pinecone-io/semantic-search-example.git"
+  },
   "scripts": {
     "clean": "rimraf ./build",
     "build": "npm-run-all format lint && tsc",
@@ -16,7 +27,7 @@
     "format:check": "npx prettier --check src"
   },
   "dependencies": {
-    "@pinecone-database/pinecone": "^7.0.0",
+    "@pinecone-database/pinecone": "^8.1.0",
     "@xenova/transformers": "2.0.1",
     "cli-progress": "^3.12.0",
     "dotenv": "^16.0.3",
