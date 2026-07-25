@@ -13,7 +13,7 @@ config();
 
 const progressBar = new cliProgress.SingleBar(
   {},
-  cliProgress.Presets.shades_classic
+  cliProgress.Presets.shades_classic,
 );
 
 let counter = 0;

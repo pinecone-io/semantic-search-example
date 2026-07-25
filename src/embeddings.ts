@@ -30,12 +30,12 @@ class Embedder {
   async embedBatch(
     texts: string[],
     batchSize: number,
-    onDoneBatch: (embeddings: PineconeRecord<TextMetadata>[]) => void
+    onDoneBatch: (embeddings: PineconeRecord<TextMetadata>[]) => void,
   ) {
     const batches = sliceIntoChunks<string>(texts, batchSize);
     for (const batch of batches) {
       const embeddings = await Promise.all(
-        batch.map((text) => this.embed(text))
+        batch.map((text) => this.embed(text)),
       );
       await onDoneBatch(embeddings);
     }

@@ -36,6 +36,6 @@ export const query = async (query: string, topK: number) => {
     results.matches?.map((match) => ({
       text: match.metadata?.text,
       score: match.score,
-    }))
+    })),
   );
 };
