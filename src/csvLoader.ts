@@ -2,7 +2,7 @@ import fs from "fs/promises";
 import Papa from "papaparse";
 
 async function loadCSVFile(
-  filePath: string
+  filePath: string,
 ): Promise<Papa.ParseResult<Record<string, unknown>>> {
   try {
     // Get csv file absolute path
