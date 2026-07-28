@@ -6,7 +6,7 @@ In this walkthrough we will see how to use Pinecone for semantic search.
 
 Prerequisites:
 
-- `Node.js` version `^20.19.0` or `>=22.12.0` (required by Vite/Vitest)
+- `Node.js` version `>=22.12.0` (required by Vite/Vitest)
 
 Clone the repository and install the dependencies.
 
