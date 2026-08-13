@@ -33,6 +33,8 @@ jobs:
         run: npx tsc
       - name: Unit + mocked tests
         run: npm run test
+      - name: Dependency audit (fail on high or critical)
+        run: npm audit --audit-level=high
 
   run-integration-tests:
     # Live tests against a real Pinecone project. Restricted to pushes to
