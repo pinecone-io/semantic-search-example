@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@types/cli-progress": "^3.11.0",
-    "@types/node": "^20.2.3",
+    "@types/node": "^26.2.0",
     "@types/papaparse": "^5.3.7",
     "@types/uuid": "^9.0.1",
     "@types/yargs": "^17.0.24",
