@@ -4,12 +4,12 @@ runs:
   using: "composite"
   steps:
     - name: Setup Node
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v7
       with:
         node-version: 22.x
         registry-url: "https://registry.npmjs.org"
     - name: Cache NPM dependencies
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: ~/.npm
         key: npm-${{ hashFiles('package-lock.json') }}
