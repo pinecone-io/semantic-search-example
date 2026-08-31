@@ -33,7 +33,7 @@
     "dotenv": "^16.0.3",
     "onnxruntime-node": "^1.14.0",
     "papaparse": "^5.4.1",
-    "uuid": "^14.0.1",
+    "uuid": "^14.0.2",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
