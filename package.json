@@ -53,7 +53,7 @@
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4",
     "typescript-eslint": "^8.65.0",
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.11"
   },
   "engines": {
     "node": ">=22.12.0"
