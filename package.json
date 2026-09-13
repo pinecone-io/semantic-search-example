@@ -40,7 +40,7 @@
     "@types/cli-progress": "^3.11.0",
     "@types/node": "^20.2.3",
     "@types/papaparse": "^5.3.7",
-    "@types/uuid": "^9.0.1",
+    "@types/uuid": "^11.0.0",
     "@types/yargs": "^17.0.24",
     "@eslint/js": "^10.0.1",
     "@vitest/coverage-v8": "^4.0.16",
