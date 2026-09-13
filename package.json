@@ -34,7 +34,7 @@
     "onnxruntime-node": "^1.14.0",
     "papaparse": "^5.4.1",
     "uuid": "^14.0.1",
-    "yargs": "^17.7.2"
+    "yargs": "^18.1.0"
   },
   "devDependencies": {
     "@types/cli-progress": "^3.11.0",
